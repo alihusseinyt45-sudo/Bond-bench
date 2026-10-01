@@ -234,7 +234,7 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 body.hand-on .hctl{display:flex}
 .hctl input{width:110px;accent-color:#4D8DFF}
 .hbtn{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:8px;min-height:32px;padding:0 10px;font:600 13px/1 var(--body);cursor:pointer}
-.hfps{min-width:46px;text-align:right;opacity:.8;font-variant-numeric:tabular-nums}
+.hfps{min-width:96px;text-align:right;opacity:.8;font-variant-numeric:tabular-nums}
 #hcur0{--hc:#4D8DFF}
 #hcur1{--hc:#FF9A3C}
 .hand-dock{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;display:none;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100vw - 28px);pointer-events:none}
@@ -260,7 +260,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v5 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v6 · 1 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -2421,7 +2421,7 @@ var MP_MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/ha
 function mkSlot(i){return {i:i,on:false,x:0,y:0,px:0,py:0,ox:0,oy:0,offT:0,onN:0,offN:0,hist:[],fx:{v:null,d:0,t:0},fy:{v:null,d:0,t:0},pinch:false,seen:0,down:null,cur:null};}
 var HGAIN=1.12;
 function histAt(s,t){var h=s.hist,b=h[0]||{x:s.x,y:s.y};for(var i=h.length-1;i>=0;i--)if(h[i].t<=t){b=h[i];break;}return b;}
-var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,nh:2,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
+var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,nh:2,vfN:0,sentN:-1,noResize:false,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
 var HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 var HAND_COL=['#4D8DFF','#FF9A3C'];
 function hMsg(m,err){var s=$('hstat');$('hmsg').textContent=m||'';s.hidden=!m;$('hdock').classList.toggle('err',!!err);}
@@ -2467,7 +2467,7 @@ async function handStart(){
       var vision;
       try{vision=await import(MP+'/vision_bundle.mjs');}catch(e){throw {k:'lib'};}
       var fs;try{fs=await vision.FilesetResolver.forVisionTasks(MP+'/wasm');}catch(e){throw {k:'lib'};}
-      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:HT.nh,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
+      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:HT.nh,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};
       try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'));HT.dg='GPU';}
       catch(e){try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'));HT.dg='CPU';}catch(e2){throw {k:'lib'};}}
     }
@@ -2509,7 +2509,7 @@ function handStop(keep){
 }
 var WK_SRC="let lm=null;self.onmessage=async function(e){var m=e.data;"+
  "if(m.t==='init'){try{var vision=await import(m.mp+'/vision_bundle.mjs');var fs=await vision.FilesetResolver.forVisionTasks(m.mp+'/wasm',true);"+
- "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};"+
+ "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};"+
  "var dg='GPU';try{lm=await vision.HandLandmarker.createFromOptions(fs,o('GPU'));}catch(x){dg='CPU';lm=await vision.HandLandmarker.createFromOptions(fs,o('CPU'));}"+
  "self.postMessage({t:'ready',dg:dg});}catch(err){self.postMessage({t:'fail',msg:String(err&&err.message||err)});}}"+
  "else if(m.t==='frame'){var r=null;try{r=lm.detectForVideo(m.img,m.ts);}catch(x){}try{m.img.close();}catch(x){}self.postMessage({t:'res',lm:r&&r.landmarks?r.landmarks:[]});}"+
@@ -2523,7 +2523,8 @@ function initWorker(){
     function fin(x){if(done)return;done=true;clearTimeout(to);if(!x){try{w.terminate();}catch(e){}}res(x);}
     w.onmessage=function(e){var m=e.data;
       if(m.t==='ready'){if(m.dg!=='GPU'){fin(null);return;}
-        w.onmessage=function(ev){var r=ev.data;if(r.t!=='res')return;HT.wbusy=false;if(!HT.on)return;hCount();hProcess({landmarks:r.lm},performance.now());};
+        w.onmessage=function(ev){var r=ev.data;if(r.t!=='res')return;HT.wbusy=false;if(!HT.on)return;hSend();hCount();hProcess({landmarks:r.lm},performance.now());};
+        HT.dg='GPU';
         fin(w);}
       else if(m.t==='fail')fin(null);};
     w.onerror=function(){fin(null);};
@@ -2532,7 +2533,7 @@ function initWorker(){
 }
 function hCount(){
   HT.fc++;var t=performance.now();
-  if(t-HT.ft>=1000){var f=$('hfps');if(f)f.textContent=Math.round(HT.fc*1000/(t-HT.ft))+' fps';HT.fc=0;HT.ft=t;}
+  if(t-HT.ft>=1000){var f=$('hfps');if(f)f.textContent=Math.round(HT.fc*1000/(t-HT.ft))+' fps · '+(HT.wk?'bg ':'')+(HT.dg||'');HT.fc=0;HT.ft=t;}
 }
 /* Cursor glides at screen rate between tracking updates */
 function hDisp(){
@@ -2552,14 +2553,9 @@ function hFrame(){
     HT.vw=v.videoWidth;HT.vh=v.videoHeight;
     var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;
     if(HT.wk){
+      HT.vfN++;
       if(HT.wbusy&&ts-HT.wsent>2000)HT.wbusy=false;
-      if(!HT.wbusy){
-        HT.wbusy=true;HT.wsent=ts;HT.lastTs=ts;
-        createImageBitmap(v).then(function(bm){
-          if(!HT.on||!HT.wk){try{bm.close();}catch(e){}HT.wbusy=false;return;}
-          HT.wk.postMessage({t:'frame',img:bm,ts:ts},[bm]);
-        },function(){HT.wbusy=false;});
-      }
+      hSend();
     }else{
       var src=v;
       if(HT.dg!=='GPU'&&!HT.useVideo){
@@ -2576,6 +2572,18 @@ function hFrame(){
     }
   }
   hSchedule();
+}
+function hSend(){
+  var v=$('hvid');
+  if(!HT.on||!HT.wk||HT.wbusy||HT.vfN===HT.sentN||v.readyState<2||!v.videoWidth)return;
+  var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;HT.lastTs=ts;
+  HT.wbusy=true;HT.wsent=ts;HT.sentN=HT.vfN;
+  var rw=480,rh=Math.max(1,Math.round(rw*v.videoHeight/v.videoWidth));
+  var p=HT.noResize?createImageBitmap(v):createImageBitmap(v,{resizeWidth:rw,resizeHeight:rh,resizeQuality:'low'});
+  p.then(function(bm){
+    if(!HT.on||!HT.wk){try{bm.close();}catch(e){}HT.wbusy=false;return;}
+    HT.wk.postMessage({t:'frame',img:bm,ts:ts},[bm]);
+  },function(){if(!HT.noResize)HT.noResize=true;HT.wbusy=false;});
 }
 function setHands(n){
   HT.nh=n;try{localStorage.setItem('bondbench-hands',n);}catch(e){}
