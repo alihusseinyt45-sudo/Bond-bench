@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bond Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --display:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bg:#E7ECE8; --panel:#F8FAF7; --inset:#EEF2EE; --ink:#14222E; --ink2:#47596A; --line:#C4CFC8;
+  --accent:#14222E; --accent-ink:#F8FAF7; --focus:#2F6BFF; --cell-ink:#14222E;
+  --lp:#C2364A; --dneg:#C2364A; --dpos:#2A5BD7;
+  --t-ionic:#7A3FB8; --t-polar:#0B7480; --t-nonpolar:#3F7D22; --t-metallic:#A15F00; --t-network:#8A3B3B;
+  --c-alk:#F5B5A4; --c-ake:#F4D38B; --c-tm:#B8D0EE; --c-ptm:#A9D6CB; --c-mtl:#D6DC9E;
+  --c-nm:#B5E3A0; --c-hal:#F0BCE0; --c-ng:#CDBFF2; --c-lan:#F8D7C0; --c-act:#E6C4D8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A22; --panel:#15242E; --inset:#1B2D39; --ink:#E8F0F3; --ink2:#9DB0BD; --line:#2A3C48;
+    --accent:#E8F0F3; --accent-ink:#0E1A22; --focus:#7FA6FF; --cell-ink:#F2F6F7;
+    --lp:#FF7A8C; --dneg:#FF7A8C; --dpos:#7FA6FF;
+    --t-ionic:#B994EA; --t-polar:#4FC3CC; --t-nonpolar:#8FCB6A; --t-metallic:#E8A63C; --t-network:#E58A8A;
+    --c-alk:#8A4A3D; --c-ake:#86702F; --c-tm:#3C5F8A; --c-ptm:#2E6B5E; --c-mtl:#6A7030;
+    --c-nm:#40703A; --c-hal:#8A4A7C; --c-ng:#5D5190; --c-lan:#8A6248; --c-act:#7E5370;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A22; --panel:#15242E; --inset:#1B2D39; --ink:#E8F0F3; --ink2:#9DB0BD; --line:#2A3C48;
+  --accent:#E8F0F3; --accent-ink:#0E1A22; --focus:#7FA6FF; --cell-ink:#F2F6F7;
+  --lp:#FF7A8C; --dneg:#FF7A8C; --dpos:#7FA6FF;
+  --t-ionic:#B994EA; --t-polar:#4FC3CC; --t-nonpolar:#8FCB6A; --t-metallic:#E8A63C; --t-network:#E58A8A;
+  --c-alk:#8A4A3D; --c-ake:#86702F; --c-tm:#3C5F8A; --c-ptm:#2E6B5E; --c-mtl:#6A7030;
+  --c-nm:#40703A; --c-hal:#8A4A7C; --c-ng:#5D5190; --c-lan:#8A6248; --c-act:#7E5370;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+.app{max-width:1400px;margin:0 auto;padding:16px 20px 32px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+/* Periodic table */
+.table-wrap{container-type:inline-size;background:var(--panel);border-radius:16px;padding:14px}
+.pt{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));grid-template-rows:repeat(7,auto) 10px repeat(2,auto);gap:3px}
+.intro{grid-column:3/13;grid-row:1/4;position:relative}
+.intro>div{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 6px 0 10px}
+.intro h1{font-family:var(--display);font-weight:700;margin:0;line-height:1.02;font-size:26px;font-size:clamp(20px,4.6cqw,42px);letter-spacing:-.01em}
+.intro p{margin:6px 0 0;color:var(--ink2);font-size:12px;font-size:clamp(11px,1.9cqw,16px);line-height:1.3}
+.el{aspect-ratio:1;border:0;border-radius:6px;padding:0;background:var(--cat);color:var(--cell-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;position:relative;line-height:1;transition:transform .12s ease}
+.el .n{font-size:8px;font-size:clamp(6px,1.45cqw,10px);opacity:.72}
+.el .s{font-family:var(--display);font-weight:700;font-size:14px;font-size:clamp(10px,2.6cqw,22px)}
+.el:active{transform:scale(.94)}
+.el[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:1px;transform:scale(1.07);z-index:2}
+.el:focus-visible{outline:3px solid var(--focus);outline-offset:2px;z-index:3}
+@media (hover:hover){.el:hover{transform:scale(1.08);z-index:2}}
+.ph{aspect-ratio:1;border-radius:6px;background:var(--cat);opacity:.55;display:flex;align-items:center;justify-content:center;font-size:7px;font-size:clamp(5px,1.25cqw,10px);color:var(--cell-ink);text-align:center;line-height:1.05}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 16px;padding:0;margin:14px 2px 0;font-size:13px;color:var(--ink2)}
+.legend li{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;background:var(--cat);display:inline-block}
+
+/* Bench */
+.bench{background:var(--panel);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+@media (min-width:961px){.bench{position:sticky;top:12px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}}
+.slots{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.plus{font-family:var(--display);font-size:26px;color:var(--ink2)}
+.slot{min-height:118px;border-radius:14px;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px;position:relative;color:var(--ink2);font-size:13px;line-height:1.25}
+.slot.filled{border:2px solid transparent;background:var(--cat);color:var(--cell-ink)}
+.slot .big{font-family:var(--display);font-weight:700;font-size:42px;line-height:1}
+.slot .nm{font-size:15px;font-weight:600;margin-top:2px}
+.slot .meta{font-size:12px;opacity:.8;margin-top:2px}
+.slot .x{position:absolute;top:2px;right:2px;width:36px;height:36px;border:0;border-radius:10px;background:transparent;color:inherit;font-size:22px;line-height:1;cursor:pointer}
+.slot .x:focus-visible{outline:3px solid var(--focus)}
+.actions{display:flex;gap:10px}
+.btn{appearance:none;border:0;border-radius:12px;min-height:48px;padding:0 18px;font:600 16px/1 var(--body);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn.grow{flex:1}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:focus-visible,.chip:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn:active:not(:disabled){transform:scale(.98)}
+.quick p{margin:0 0 8px;color:var(--ink2);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1.5px solid var(--line);background:var(--inset);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font:500 15px/1 var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--panel);font-weight:600}
+.chip sub{font-size:.75em}
+
+/* Result */
+.result{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:14px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 12px}
+.formula{font-family:var(--display);font-weight:700;font-size:46px;line-height:1;letter-spacing:-.01em}
+.formula.long{font-size:30px}
+.formula sub{font-size:.6em;line-height:0}
+.cname{color:var(--ink2);font-size:16px;margin-top:4px}
+.pill{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:600;font-size:14px;color:var(--t);border:1.5px solid var(--t);background:rgba(0,0,0,.05);background:color-mix(in srgb,var(--t) 14%,transparent);white-space:nowrap}
+.dia{width:100%;height:auto;max-height:270px;display:block;background:var(--inset);border-radius:14px;animation:pop .35s ease}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.cap{margin:-6px 2px 0;color:var(--ink2);font-size:12.5px}
+.gauge .track{display:flex;height:10px;border-radius:999px;overflow:visible;position:relative}
+.gauge .seg{display:block;height:100%}
+.gauge .seg:first-child{border-radius:999px 0 0 999px}
+.gauge .seg:nth-child(3){border-radius:0 999px 999px 0}
+.gauge .seg.np{flex:.4;background:var(--t-nonpolar)}
+.gauge .seg.po{flex:1.3;background:var(--t-polar)}
+.gauge .seg.io{flex:1.6;background:var(--t-ionic)}
+.gauge .mark{position:absolute;top:-7px;width:0;height:0;margin-left:-7px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--ink)}
+.gauge .gl{display:flex;font-size:12px;color:var(--ink2);margin-top:5px}
+.gauge .gl span:nth-child(1){flex:.4}
+.gauge .gl span:nth-child(2){flex:1.3}
+.gauge .gl span:nth-child(3){flex:1.6;text-align:right}
+.gauge .den{margin:6px 0 0;font-size:13.5px;color:var(--ink2)}
+.note{margin:0;font-size:13px;color:var(--ink2);background:var(--inset);border-radius:10px;padding:9px 12px}
+.card p{margin:0}
+.details{display:grid;gap:16px;animation:pop .3s ease}
+.details h3{font-family:var(--display);font-weight:700;font-size:18px;margin:0 0 6px}
+.details p{margin:0 0 8px}
+.details p:last-child{margin-bottom:0}
+.details ul{margin:0;padding-left:20px;display:grid;gap:6px}
+dl.props{margin:0;display:grid}
+.props .r{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.props .r:first-child{border-top:0}
+.props dt{color:var(--ink2);font-size:13.5px}
+.props dd{margin:0}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+.e{animation:drift 3.2s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(var(--dx),var(--dy))}}
+
+/* ---------- Shell ---------- */
+:root{--link:#B86B00;--sel:#2F6BFF;--bench:#EEF2EE}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--link:#F0A83C;--sel:#7FA6FF;--bench:#12212B}}
+:root[data-theme="dark"]{--link:#F0A83C;--sel:#7FA6FF;--bench:#12212B}
+.shell{display:flex;flex-direction:column;min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.top{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;width:100%;max-width:1600px;margin:0 auto;padding:12px 20px 0}
+.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em;line-height:1;margin:0 auto 0 0}
+.tabs{display:flex;gap:4px;background:var(--panel);border-radius:12px;padding:4px}
+.tab{appearance:none;border:0;background:transparent;color:var(--ink);font:600 15px/1 var(--body);min-height:42px;padding:0 18px;border-radius:9px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible,.tb:focus-visible,.atom-btn:focus-visible,.mol-btn:focus-visible,.seg button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hand-btn{min-height:46px;font-size:15px}
+.hand-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margin:0 auto;padding:12px 20px 20px;min-height:0}
+.view[hidden]{display:none!important}
+.intro h2{font-family:var(--display);font-weight:700;margin:0;line-height:1.02;font-size:24px;font-size:clamp(18px,4cqw,36px);letter-spacing:-.01em}
+
+/* ---------- Build layout ---------- */
+.build{flex:1;display:grid;grid-template-columns:228px minmax(0,1fr) 320px;gap:14px;min-height:520px}
+@media (min-width:901px){
+  body.mode-build .shell{height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  .build{min-height:0}
+}
+@media (min-width:901px) and (max-width:1180px){.build{grid-template-columns:208px minmax(0,1fr) 280px}}
+.shelf,.binfo{background:var(--panel);border-radius:16px;overflow:auto;overscroll-behavior:contain;min-height:0}
+.shelf{padding:12px;display:flex;flex-direction:column;gap:10px}
+.seg{display:flex;gap:3px;background:var(--inset);border-radius:10px;padding:3px}
+.seg button{flex:1;appearance:none;border:0;background:transparent;color:var(--ink);font:600 14px/1 var(--body);min-height:38px;border-radius:8px;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--line)}
+.pal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;touch-action:pan-y;align-content:start}
+.pal[hidden]{display:none}
+.atom-btn{appearance:none;aspect-ratio:1/1;border:0;border-radius:12px;background:var(--f);color:var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:grab;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.2);padding:0;transition:transform .1s ease}
+.atom-btn .s{font:700 22px/1 var(--display)}
+.atom-btn .n{font-size:10.5px;line-height:1;opacity:.9}
+.atom-btn:active,.mol-btn:active,.hand-press{transform:scale(.95)}
+.all-btn{grid-column:1/-1;appearance:none;border:1.5px dashed var(--line);background:transparent;color:var(--ink);border-radius:12px;min-height:46px;font:600 14px/1 var(--body);cursor:pointer}
+.grp{grid-column:1/-1;font:700 14px/1.2 var(--display);margin:8px 2px 0;color:var(--ink2)}
+.grp:first-child{margin-top:0}
+.mol-btn{grid-column:1/-1;appearance:none;text-align:left;border:1.5px solid var(--line);background:var(--inset);color:var(--ink);border-radius:12px;min-height:52px;padding:6px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:grab;transition:transform .1s ease}
+.mol-btn b{font-weight:600;font-size:15px;line-height:1.15}
+.mol-btn span{font-size:12.5px;color:var(--ink2);line-height:1.2}
+.shelf-note{margin:2px 2px 0;font-size:12.5px;color:var(--ink2);line-height:1.35}
+.stage{position:relative;border-radius:16px;overflow:hidden;background:var(--bench);box-shadow:inset 0 0 0 1.5px var(--line);touch-action:none;min-height:0}
+#bcv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.tools{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.tb{pointer-events:auto;appearance:none;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;min-height:40px;padding:0 13px;font:600 14px/1 var(--body);cursor:pointer}
+.tb:disabled{opacity:.4;cursor:default}
+.tb:active:not(:disabled){transform:scale(.96)}
+.toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);background:var(--accent);color:var(--accent-ink);padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.35;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.toast.show{opacity:1}
+.binfo{padding:16px;display:flex;flex-direction:column;gap:14px}
+.binfo p{margin:0}
+.binfo h3{font-family:var(--display);font-weight:700;font-size:17px;margin:0 0 6px}
+.ih{font-family:var(--display);font-weight:700;font-size:21px;margin:0;line-height:1.1}
+.muted{color:var(--ink2);font-size:13.5px}
+.selline{font-size:14px;background:var(--inset);border-radius:10px;padding:9px 12px}
+.blist{list-style:none;margin:0;padding:0;display:grid}
+.blist li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.blist li:first-child{border-top:0}
+.blist .k{color:var(--ink2);text-align:right}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.acts .btn{min-height:44px;font-size:15px;padding:0 14px}
+.expl{display:grid;gap:8px}
+.expl p{font-size:14.5px}
+.spare{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--inset);border-radius:12px;padding:10px 12px;font-size:14px}
+.spare .btn{min-height:40px;font-size:14px}
+.chip:disabled{opacity:.35;cursor:default}
+@media (max-width:900px){
+  .build{grid-template-columns:minmax(0,1fr);min-height:0}
+  .shelf{overflow:visible}
+  .pal{grid-auto-flow:column;grid-template-columns:none;grid-template-rows:repeat(2,auto);grid-auto-columns:66px;overflow-x:auto;touch-action:pan-x;padding-bottom:6px}
+  .pal.mols{grid-auto-columns:158px}
+  .pal .grp,.shelf-note{display:none}
+  .mol-btn,.all-btn{grid-column:auto}
+  .all-btn{grid-row:span 2;min-height:0}
+  .stage{height:58vh;min-height:380px}
+  .binfo{overflow:visible}
+}
+
+/* ---------- All-elements overlay ---------- */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(8,16,22,.5);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.overlay.open{display:flex}
+.ov-panel{width:min(1100px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:18px;padding:14px}
+.ov-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 10px}
+.ov-head h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0}
+.ov-panel .table-wrap{padding:0}
+
+/* ---------- Drag ghost + hand control ---------- */
+#ghost{position:fixed;left:0;top:0;z-index:55;pointer-events:none;display:none;align-items:center;justify-content:center}
+#ghost.g-atom{width:46px;height:46px;border-radius:50%;font:700 19px/1 var(--display);box-shadow:0 0 0 2px var(--ink)}
+#ghost.g-mol{padding:9px 13px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:14px;white-space:nowrap}
+.hcur{position:fixed;left:0;top:0;z-index:60;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:3px solid var(--hc);background:rgba(255,255,255,.12);box-shadow:0 0 0 2px rgba(0,0,0,.4);pointer-events:none;display:none;transition:width .08s,height .08s,margin .08s,background .08s}
+.hcur.pinch{width:24px;height:24px;margin:-12px 0 0 -12px;background:var(--hc)}
+#hcur0{--hc:#4D8DFF}
+#hcur1{--hc:#FF9A3C}
+.hand-dock{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;display:none;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100vw - 28px);pointer-events:none}
+.hand-dock.on{display:flex}
+#hvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);z-index:0;display:none;pointer-events:none;background:#000}
+#hfull{position:fixed;inset:0;width:100%;height:100%;z-index:52;pointer-events:none;display:none}
+body.hand-on{background:#000}
+body.hand-on #hvid,body.hand-on #hfull{display:block}
+body.hand-on .shell{position:relative;z-index:1}
+body.hand-on .shelf,body.hand-on .binfo,body.hand-on .table-wrap,body.hand-on .bench,body.hand-on .ov-panel,body.hand-on .tabs,body.hand-on .brand{background:color-mix(in srgb,var(--panel) 74%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+body.hand-on .brand{padding:8px 14px;border-radius:12px;margin-right:auto}
+body.hand-on .stage{background:color-mix(in srgb,var(--bench) 30%,transparent)}
+body.hand-on .btn.ghost,body.hand-on .tb{background:color-mix(in srgb,var(--panel) 80%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+body.hand-on .overlay{background:rgba(8,16,22,.12)}
+.hstat{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:10px 10px 10px 13px;font-size:13.5px;line-height:1.35;max-width:340px}
+.hstat[hidden]{display:none}
+.hstat button{appearance:none;border:0;background:transparent;color:inherit;font:600 13.5px/1 var(--body);min-height:32px;padding:0 6px;border-radius:8px;cursor:pointer;text-decoration:underline}
+.hand-hover{outline:3px solid var(--focus)!important;outline-offset:2px}
+#pairView.app{padding:0;max-width:none;margin:0}
+
+</style>
+</head>
+<body class="mode-build">
+<div class="shell">
+<header class="top">
+  <p class="brand">Bond Bench</p>
+  <div class="tabs" role="tablist" aria-label="Mode">
+    <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
+    <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
+  </div>
+  <button class="btn ghost hand-btn" type="button" id="handBtn" data-cmd="hand" aria-pressed="false">Hand control</button>
+</header>
+<main>
+  <section class="view build" id="buildView" aria-label="Build molecules">
+    <aside class="shelf" aria-label="Atoms and molecules">
+      <div class="seg" role="tablist" aria-label="Shelf">
+        <button type="button" role="tab" data-cmd="shelf" data-shelf="atoms" aria-selected="true">Atoms</button>
+        <button type="button" role="tab" data-cmd="shelf" data-shelf="mols" aria-selected="false">Molecules</button>
+      </div>
+      <div class="pal" id="palAtoms"></div>
+      <div class="pal mols" id="palMols" hidden></div>
+      <p class="shelf-note" id="shelfNote">Tap to add, or drag onto the bench.</p>
+    </aside>
+    <div class="stage" id="stage">
+      <canvas id="bcv" role="img" aria-label="Molecule bench"></canvas>
+      <div class="tools" role="toolbar" aria-label="Bench tools">
+        <button class="tb" type="button" data-cmd="undo" id="tUndo">Undo</button>
+        <button class="tb" type="button" data-cmd="fillh" id="tFill">Add H</button>
+        <button class="tb" type="button" data-cmd="tidy">Tidy</button>
+        <button class="tb" type="button" data-cmd="fit">Fit</button>
+        <button class="tb" type="button" data-cmd="del" id="tDel">Delete</button>
+        <button class="tb" type="button" data-cmd="clear" id="tClear">Clear</button>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <aside class="binfo" id="binfo" aria-live="polite" aria-label="Details"></aside>
+  </section>
+
+  <section class="view app" id="pairView" aria-label="Pair up two elements" hidden>
+    <div class="layout">
+      <section class="table-wrap" aria-label="Periodic table">
+        <div class="pt" id="pt">
+          <div class="intro"><div><h2>Pair up</h2><p>Tap two elements, press Combine, and see how they bond.</p></div></div>
+        </div>
+        <ul class="legend" id="legend"></ul>
+      </section>
+      <aside class="bench" aria-label="Bench">
+        <div class="slots" id="slots"></div>
+        <div class="actions">
+          <button class="btn grow" id="combine" data-act="combine" disabled>Combine</button>
+          <button class="btn ghost" data-act="clear">Clear</button>
+        </div>
+        <div id="result" aria-live="polite"></div>
+      </aside>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="overlay" id="elOverlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
+  <div class="ov-panel">
+    <div class="ov-head"><h2 id="ovTitle">Pick any element</h2><button class="btn ghost" type="button" data-cmd="ovclose">Close</button></div>
+    <div class="table-wrap"><div class="pt" id="pt2"></div></div>
+  </div>
+</div>
+
+<div id="ghost" aria-hidden="true"></div>
+<video id="hvid" playsinline muted></video>
+<canvas id="hfull" aria-hidden="true"></canvas>
+<div class="hcur" id="hcur0" aria-hidden="true"></div>
+<div class="hcur" id="hcur1" aria-hidden="true"></div>
+<div class="hand-dock" id="hdock">
+  <div class="hstat" id="hstat" hidden><span id="hmsg"></span><button type="button" data-cmd="hclose">Close</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Element data: symbol | name | category | electronegativity (Pauling) ---------- */
+var RAW = [
+'H|Hydrogen|nm|2.20','He|Helium|ng|','Li|Lithium|alk|0.98','Be|Beryllium|ake|1.57','B|Boron|mtl|2.04',
+'C|Carbon|nm|2.55','N|Nitrogen|nm|3.04','O|Oxygen|nm|3.44','F|Fluorine|hal|3.98','Ne|Neon|ng|',
+'Na|Sodium|alk|0.93','Mg|Magnesium|ake|1.31','Al|Aluminium|ptm|1.61','Si|Silicon|mtl|1.90','P|Phosphorus|nm|2.19',
+'S|Sulfur|nm|2.58','Cl|Chlorine|hal|3.16','Ar|Argon|ng|','K|Potassium|alk|0.82','Ca|Calcium|ake|1.00',
+'Sc|Scandium|tm|1.36','Ti|Titanium|tm|1.54','V|Vanadium|tm|1.63','Cr|Chromium|tm|1.66','Mn|Manganese|tm|1.55',
+'Fe|Iron|tm|1.83','Co|Cobalt|tm|1.88','Ni|Nickel|tm|1.91','Cu|Copper|tm|1.90','Zn|Zinc|tm|1.65',
+'Ga|Gallium|ptm|1.81','Ge|Germanium|mtl|2.01','As|Arsenic|mtl|2.18','Se|Selenium|nm|2.55','Br|Bromine|hal|2.96',
+'Kr|Krypton|ng|','Rb|Rubidium|alk|0.82','Sr|Strontium|ake|0.95','Y|Yttrium|tm|1.22','Zr|Zirconium|tm|1.33',
+'Nb|Niobium|tm|1.6','Mo|Molybdenum|tm|2.16','Tc|Technetium|tm|1.9','Ru|Ruthenium|tm|2.2','Rh|Rhodium|tm|2.28',
+'Pd|Palladium|tm|2.20','Ag|Silver|tm|1.93','Cd|Cadmium|tm|1.69','In|Indium|ptm|1.78','Sn|Tin|ptm|1.96',
+'Sb|Antimony|mtl|2.05','Te|Tellurium|mtl|2.1','I|Iodine|hal|2.66','Xe|Xenon|ng|','Cs|Caesium|alk|0.79',
+'Ba|Barium|ake|0.89','La|Lanthanum|lan|1.10','Ce|Cerium|lan|1.12','Pr|Praseodymium|lan|1.13','Nd|Neodymium|lan|1.14',
+'Pm|Promethium|lan|1.13','Sm|Samarium|lan|1.17','Eu|Europium|lan|1.2','Gd|Gadolinium|lan|1.2','Tb|Terbium|lan|1.1',
+'Dy|Dysprosium|lan|1.22','Ho|Holmium|lan|1.23','Er|Erbium|lan|1.24','Tm|Thulium|lan|1.25','Yb|Ytterbium|lan|1.1',
+'Lu|Lutetium|lan|1.27','Hf|Hafnium|tm|1.3','Ta|Tantalum|tm|1.5','W|Tungsten|tm|2.36','Re|Rhenium|tm|1.9',
+'Os|Osmium|tm|2.2','Ir|Iridium|tm|2.20','Pt|Platinum|tm|2.28','Au|Gold|tm|2.54','Hg|Mercury|tm|2.00',
+'Tl|Thallium|ptm|1.62','Pb|Lead|ptm|1.87','Bi|Bismuth|ptm|2.02','Po|Polonium|ptm|2.0','At|Astatine|hal|2.2',
+'Rn|Radon|ng|','Fr|Francium|alk|0.7','Ra|Radium|ake|0.9','Ac|Actinium|act|1.1','Th|Thorium|act|1.3',
+'Pa|Protactinium|act|1.5','U|Uranium|act|1.38','Np|Neptunium|act|1.36','Pu|Plutonium|act|1.28','Am|Americium|act|1.3',
+'Cm|Curium|act|1.3','Bk|Berkelium|act|1.3','Cf|Californium|act|1.3','Es|Einsteinium|act|1.3','Fm|Fermium|act|1.3',
+'Md|Mendelevium|act|1.3','No|Nobelium|act|1.3','Lr|Lawrencium|act|1.3','Rf|Rutherfordium|tm|','Db|Dubnium|tm|',
+'Sg|Seaborgium|tm|','Bh|Bohrium|tm|','Hs|Hassium|tm|','Mt|Meitnerium|tm|','Ds|Darmstadtium|tm|',
+'Rg|Roentgenium|tm|','Cn|Copernicium|tm|','Nh|Nihonium|ptm|','Fl|Flerovium|ptm|','Mc|Moscovium|ptm|',
+'Lv|Livermorium|ptm|','Ts|Tennessine|hal|','Og|Oganesson|ng|'
+];
+var EL = {}, LIST = [];
+RAW.forEach(function(line,i){
+  var p=line.split('|');
+  var o={z:i+1,s:p[0],n:p[1],c:p[2],en:p[3]?parseFloat(p[3]):null};
+  LIST.push(o); EL[o.s]=o;
+});
+var CATNAME={alk:'Alkali metals',ake:'Alkaline earth metals',tm:'Transition metals',ptm:'Post-transition metals',mtl:'Metalloids',nm:'Reactive non-metals',hal:'Halogens',ng:'Noble gases',lan:'Lanthanides',act:'Actinides'};
+var METALCATS={alk:1,ake:1,tm:1,ptm:1,lan:1,act:1};
+function isMetal(e){return !!METALCATS[e.c];}
+
+function pos(z){
+  if(z===1)return[1,1]; if(z===2)return[1,18];
+  if(z<=4)return[2,z-2]; if(z<=10)return[2,z+8];
+  if(z<=12)return[3,z-10]; if(z<=18)return[3,z];
+  if(z<=36)return[4,z-18]; if(z<=54)return[5,z-36];
+  if(z<=56)return[6,z-54]; if(z<=71)return[9,z-54];
+  if(z<=86)return[6,z-68]; if(z<=88)return[7,z-86];
+  if(z<=103)return[10,z-86];
+  return[7,z-100];
+}
+
+/* ---------- Helpers ---------- */
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','−':'⁻'};
+function sup(s){return String(s).split('').map(function(c){return SUP[c]||c;}).join('');}
+function chg(c){var n=Math.abs(c);return (n>1?n:'')+(c>0?'+':'−');}
+function ion(i){return i.s+sup(chg(i.c));}
+function fmtF(f){return f.replace(/(\d+)/g,'<sub>$1</sub>');}
+function fmtT(v){return typeof v==='number'?(v<0?'−':'')+Math.abs(v)+' °C':v;}
+function gcd(a,b){return b?gcd(b,a%b):a;}
+function rnd(x){return Math.round(x*100)/100;}
+function dEN(a,b){return rnd(Math.abs(a.en-b.en));}
+function classify(d){return d<0.4?'nonpolar':(d<1.7?'polar':'ionic');}
+function none(msg){return {none:true,msg:msg};}
+
+var TYPES={
+  ionic:{label:'Ionic',v:'--t-ionic'},
+  polar:{label:'Polar covalent',v:'--t-polar'},
+  nonpolar:{label:'Non-polar covalent',v:'--t-nonpolar'},
+  metallic:{label:'Metallic',v:'--t-metallic'},
+  network:{label:'Giant covalent',v:'--t-network'}
+};
+
+/* ---------- Compound library ---------- */
+var DB={};
+function reg(a,b){DB[[a,b].sort().join('-')]=Array.prototype.slice.call(arguments,2);}
+function ION(f,name,ions,p){return Object.assign({f:f,name:name,type:'ionic',ions:ions},p);}
+function MOL(f,name,type,atoms,bonds,p){return Object.assign({f:f,name:name,type:type,mol:{atoms:atoms,bonds:bonds}},p);}
+function I(s,c,n){return {s:s,c:c,n:n};}
+var GAS_COND='Does not conduct (no ions or free electrons)';
+
+/* Ionic */
+reg('Na','Cl',ION('NaCl','Sodium chloride',[I('Na',1,1),I('Cl',-1,1)],{
+  state:'Solid',mp:801,bp:1413,sol:'Soluble (about 36 g per 100 mL at 20 °C)',
+  struct:'Giant ionic lattice: each Na⁺ is surrounded by 6 Cl⁻, and each Cl⁻ by 6 Na⁺',
+  chem:['A neutral salt: its solution has a pH close to 7.','Forms very exothermically when sodium burns in chlorine.','Electrolysing molten NaCl gives sodium and chlorine. Electrolysing brine gives chlorine, hydrogen and sodium hydroxide.']}));
+reg('K','Cl',ION('KCl','Potassium chloride',[I('K',1,1),I('Cl',-1,1)],{
+  state:'Solid',mp:770,bp:1420,sol:'Soluble (about 34 g per 100 mL at 20 °C)',
+  chem:['A neutral salt; its solution has a pH close to 7.','Used in fertilisers (potash) and in salt substitutes.','Potassium is more reactive than sodium, so it reacts even more vigorously with chlorine.']}));
+reg('Na','F',ION('NaF','Sodium fluoride',[I('Na',1,1),I('F',-1,1)],{
+  state:'Solid',mp:993,bp:1704,sol:'Soluble (about 4 g per 100 mL at 20 °C)',
+  chem:['Fluoride ions strengthen tooth enamel, so NaF is added to some toothpastes.','Toxic in large amounts.']}));
+reg('K','I',ION('KI','Potassium iodide',[I('K',1,1),I('I',-1,1)],{
+  state:'Solid',mp:681,bp:1330,sol:'Very soluble (about 140 g per 100 mL at 20 °C)',
+  chem:['Iodide ions are easily oxidised: chlorine water turns them into brown iodine.','Added to some table salt as a source of iodine.']}));
+reg('Mg','O',ION('MgO','Magnesium oxide',[I('Mg',2,1),I('O',-2,1)],{
+  state:'Solid',mp:2852,bp:3600,sol:'Very slightly soluble',
+  chem:['Forms when magnesium burns in air with a bright white flame.','A basic oxide: reacts with acids to make magnesium salts and water.','Its melting point is far higher than NaCl because 2+ and 2− ions attract much more strongly than 1+ and 1− ions.','Used to line furnaces.']}));
+reg('Mg','Cl',ION('MgCl2','Magnesium chloride',[I('Mg',2,1),I('Cl',-1,2)],{
+  state:'Solid',mp:714,bp:1412,sol:'Very soluble (about 54 g per 100 mL at 20 °C)',
+  chem:['Two Cl⁻ ions are needed to balance each Mg²⁺ ion.',`Used to de-ice roads and as the coagulant (nigari) in making tofu.`]}));
+reg('Ca','O',ION('CaO','Calcium oxide',[I('Ca',2,1),I('O',-2,1)],{
+  state:'Solid',mp:2613,bp:2850,sol:'Reacts with water',
+  chem:['Called quicklime: reacts with water to make calcium hydroxide, releasing a lot of heat.','A basic oxide: neutralises acids, so it is used to treat acidic soil.','Made by heating limestone (CaCO₃).']}));
+reg('Ca','Cl',ION('CaCl2','Calcium chloride',[I('Ca',2,1),I('Cl',-1,2)],{
+  state:'Solid',mp:772,bp:1935,sol:'Very soluble (about 75 g per 100 mL at 20 °C)',
+  chem:['Hygroscopic: absorbs water from the air, so it is used as a drying agent.','Dissolving it releases heat; it is used to melt ice on roads.']}));
+reg('Ca','F',ION('CaF2','Calcium fluoride',[I('Ca',2,1),I('F',-1,2)],{
+  state:'Solid',mp:1418,bp:2533,sol:'Practically insoluble',
+  chem:['Occurs naturally as the mineral fluorite.','The main source of fluorine compounds, such as hydrofluoric acid.']}));
+reg('Na','O',ION('Na2O','Sodium oxide',[I('Na',1,2),I('O',-2,1)],{
+  state:'Solid',mp:1132,bp:'Sublimes at about 1275 °C',sol:'Reacts with water',
+  chem:['A basic oxide: reacts violently with water to make sodium hydroxide.','Burning sodium in air mostly gives sodium peroxide (Na₂O₂), so pure Na₂O is made another way.']}));
+reg('Al','O',ION('Al2O3','Aluminium oxide',[I('Al',3,2),I('O',-2,3)],{
+  state:'Solid',mp:2072,bp:2977,sol:'Insoluble',
+  why:'Al³⁺ is small and highly charged, so it pulls on the oxide ion’s electrons. That gives the bonding some covalent character, even though it is usually treated as ionic.',
+  chem:['Amphoteric: reacts with both acids and strong bases.','Very hard: rubies and sapphires are impure Al₂O₃ crystals.','Extracted from bauxite by electrolysis of Al₂O₃ dissolved in molten cryolite.']}));
+reg('Ag','Cl',ION('AgCl','Silver chloride',[I('Ag',1,1),I('Cl',-1,1)],{
+  state:'Solid',mp:455,bp:1547,sol:'Insoluble',
+  why:'The electronegativity difference (1.23) is on the low side for ionic bonding, so this compound has noticeable covalent character. It is still treated as ionic.',
+  chem:['Forms as a white precipitate when silver nitrate solution meets chloride ions: the classic halide test.','Darkens to grey in sunlight as it breaks down to silver, which is how old photographic film worked.','Dissolves in dilute ammonia solution.']}));
+reg('Zn','O',ION('ZnO','Zinc oxide',[I('Zn',2,1),I('O',-2,1)],{
+  state:'Solid',mp:1974,bp:2360,sol:'Insoluble',
+  chem:['Amphoteric oxide: reacts with acids and with strong alkalis.','White solid that turns yellow when hot.','Used in sunscreen and as a white pigment.']}));
+reg('Fe','O',
+  ION('Fe2O3','Iron(III) oxide',[I('Fe',3,2),I('O',-2,3)],{state:'Solid',mp:1565,bp:null,sol:'Insoluble',
+    chem:['The main component of rust (in a hydrated form).','Reduced to iron in the blast furnace by carbon monoxide.']}),
+  ION('FeO','Iron(II) oxide',[I('Fe',2,1),I('O',-2,1)],{state:'Solid',mp:1377,bp:null,sol:'Insoluble',
+    chem:['A black solid that is easily oxidised further to iron(III) oxide.','Iron can form Fe²⁺ or Fe³⁺ ions, so it makes two different oxides.']}));
+reg('Fe','Cl',
+  ION('FeCl3','Iron(III) chloride',[I('Fe',3,1),I('Cl',-1,3)],{state:'Solid',mp:306,bp:'About 315 °C (decomposes)',sol:'Very soluble',
+    why:'Fe³⁺ is small and highly charged, so the bonding has a lot of covalent character. The vapour contains Fe₂Cl₆ molecules.',
+    chem:['Solutions are yellow-brown and acidic.','Used to etch copper from circuit boards.']}),
+  ION('FeCl2','Iron(II) chloride',[I('Fe',2,1),I('Cl',-1,2)],{state:'Solid',mp:677,bp:1023,sol:'Soluble',
+    chem:['Solutions are pale green (Fe²⁺ ions).','Easily oxidised to iron(III) compounds.']}));
+reg('Cu','O',
+  ION('CuO','Copper(II) oxide',[I('Cu',2,1),I('O',-2,1)],{state:'Solid',mp:1326,bp:null,sol:'Insoluble',
+    chem:['A black solid that forms when copper is heated in air.','A basic oxide: reacts with acids to give blue copper(II) salts.']}),
+  ION('Cu2O','Copper(I) oxide',[I('Cu',1,2),I('O',-2,1)],{state:'Solid',mp:1232,bp:1800,sol:'Insoluble',
+    chem:[`A red solid. It forms in Benedict's and Fehling's tests when an aldehyde reduces Cu²⁺.`]}));
+reg('Cu','Cl',ION('CuCl2','Copper(II) chloride',[I('Cu',2,1),I('Cl',-1,2)],{
+  state:'Solid',mp:498,bp:993,sol:'Very soluble',
+  chem:['The anhydrous solid is yellow-brown; the hydrate is blue-green.','Its solution conducts electricity and is a common electrolysis experiment: copper forms at the negative electrode and chlorine at the positive one.']}));
+reg('Mg','N',ION('Mg3N2','Magnesium nitride',[I('Mg',2,3),I('N',-3,2)],{
+  state:'Solid',mp:'High; decomposes on heating',bp:null,sol:'Reacts with water',
+  chem:['Forms in small amounts when magnesium burns in air, alongside the oxide.','Reacts with water to make magnesium hydroxide and ammonia gas.','Three Mg²⁺ ions (6+) balance two N³⁻ ions (6−).']}));
+
+/* Covalent: simple molecules */
+var CN={cond:GAS_COND};
+reg('H','H',MOL('H2','Hydrogen','nonpolar',[['H',-.5,0,0],['H',.5,0,0]],[[0,1,1]],{
+  state:'Gas',mp:-259,bp:-253,sol:'Very slightly soluble',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['Extremely flammable: burns in oxygen to make water (a lit splint gives a squeaky pop).','The lightest gas; used as a fuel and to make ammonia in the Haber process.']}));
+reg('O','O',MOL('O2','Oxygen','nonpolar',[['O',-.6,0,2],['O',.6,0,2]],[[0,1,2]],{
+  state:'Gas',mp:-219,bp:-183,sol:'Slightly soluble (enough for fish to breathe)',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['Supports combustion and respiration.','Has two unpaired electrons, so liquid oxygen is attracted to a magnet. A simple double-bond diagram does not show that.']}));
+reg('N','N',MOL('N2','Nitrogen','nonpolar',[['N',-.6,0,1],['N',.6,0,1]],[[0,1,3]],{
+  state:'Gas',mp:-210,bp:-196,sol:'Very slightly soluble',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['Makes up about 78% of air.','Very unreactive because the N≡N triple bond is extremely strong (about 945 kJ/mol).']}));
+reg('F','F',MOL('F2','Fluorine','nonpolar',[['F',-.6,0,3],['F',.6,0,3]],[[0,1,1]],{
+  state:'Gas',mp:-220,bp:-188,sol:'Reacts with water',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['A pale yellow gas and the most reactive non-metal element.','The F–F bond is unusually weak (about 158 kJ/mol), which adds to its reactivity.']}));
+reg('Cl','Cl',MOL('Cl2','Chlorine','nonpolar',[['Cl',-.6,0,3],['Cl',.6,0,3]],[[0,1,1]],{
+  state:'Gas',mp:-102,bp:-34,sol:'Slightly soluble (makes chlorine water)',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['A pale yellow-green, toxic gas with a choking smell.','Used to kill bacteria in drinking water and swimming pools.','Bleaches damp litmus paper.']}));
+reg('Br','Br',MOL('Br2','Bromine','nonpolar',[['Br',-.6,0,3],['Br',.6,0,3]],[[0,1,1]],{
+  state:'Liquid',mp:-7,bp:59,sol:'Slightly soluble (orange-brown bromine water)',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['A red-brown, volatile liquid that gives off orange-brown fumes.','Melting and boiling points rise down the halogens because the larger molecules have stronger London forces.']}));
+reg('I','I',MOL('I2','Iodine','nonpolar',[['I',-.6,0,3],['I',.6,0,3]],[[0,1,1]],{
+  state:'Solid',mp:114,bp:184,sol:'Barely soluble in water; dissolves in organic solvents to give a purple solution',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Non-polar molecule',
+  chem:['Shiny grey-black crystals that sublime to a purple vapour when warmed.','Turns starch solution blue-black.']}));
+reg('H','O',
+  MOL('H2O','Water','polar',[['O',0,0,2],['H',-.79,.61,0],['H',.79,.61,0]],[[0,1,1],[0,2,1]],{
+    state:'Liquid',mp:0,bp:100,sol:'Dissolves many ionic and polar substances',cond:'Pure water barely conducts; dissolved ions make it conduct',shape:'Bent, about 104.5°',polarity:'Polar molecule',
+    chem:['Hydrogen bonds between molecules give it unusually high melting and boiling points for such a small molecule.','Ice is less dense than liquid water, so it floats.','An excellent solvent for ionic and polar substances.']}),
+  MOL('H2O2','Hydrogen peroxide','polar',[['O',-.6,0,2],['O',.6,0,2],['H',-1.15,.75,0],['H',1.15,-.75,0]],[[0,1,1],[0,2,1],[1,3,1]],{
+    state:'Liquid',mp:-0.4,bp:150,sol:'Mixes with water',cond:'Does not conduct well',shape:'Twisted “open book” shape (not flat)',polarity:'Polar molecule',
+    chem:['Decomposes into water and oxygen, and catalysts such as manganese(IV) oxide speed this up.','The O–O single bond is weak, which makes it a good oxidising agent and bleach.']}));
+reg('H','Cl',MOL('HCl','Hydrogen chloride','polar',[['H',-.7,0,0],['Cl',.7,0,3]],[[0,1,1]],{
+  state:'Gas',mp:-114,bp:-85,sol:'Very soluble (makes hydrochloric acid)',cond:'The gas does not conduct; the solution does, because it contains ions',shape:'Linear (two atoms)',polarity:'Polar molecule',
+  chem:['Ionises completely in water (HCl → H⁺ + Cl⁻), so hydrochloric acid is a strong acid.','Dry HCl gas does not turn dry blue litmus red; it needs water to act as an acid.']}));
+reg('H','F',MOL('HF','Hydrogen fluoride','polar',[['H',-.6,0,0],['F',.6,0,3]],[[0,1,1]],{
+  state:'Gas (boils at 19.5 °C)',mp:-84,bp:19.5,sol:'Very soluble (makes hydrofluoric acid)',cond:'The gas does not conduct',shape:'Linear (two atoms)',polarity:'Polar molecule',
+  why:'The electronegativity difference (1.78) is just above the usual ionic cut-off, but HF is a covalent molecule. The ΔEN scale is only a rule of thumb.',
+  chem:['Hydrogen bonding makes its boiling point far higher than HCl, HBr or HI.','A weak acid in water, but very dangerous: it attacks glass and penetrates skin.']}));
+reg('H','Br',MOL('HBr','Hydrogen bromide','polar',[['H',-.75,0,0],['Br',.75,0,3]],[[0,1,1]],{
+  state:'Gas',mp:-87,bp:-67,sol:'Very soluble (makes hydrobromic acid)',cond:'The gas does not conduct',shape:'Linear (two atoms)',polarity:'Polar molecule',
+  chem:['A strong acid in water: fully ionised.','The H–Br bond is weaker than H–Cl, so HBr is easier to oxidise.']}));
+reg('H','I',MOL('HI','Hydrogen iodide','polar',[['H',-.8,0,0],['I',.8,0,3]],[[0,1,1]],{
+  state:'Gas',mp:-51,bp:-35,sol:'Very soluble (makes hydroiodic acid)',cond:'The gas does not conduct',shape:'Linear (two atoms)',polarity:'Polar molecule',
+  chem:['A strong acid in water.','H–I is the weakest hydrogen halide bond, so HI breaks down into H₂ and I₂ most easily.']}));
+reg('H','N',MOL('NH3','Ammonia','polar',[['N',0,0,1],['H',.94,.34,0],['H',-.94,.34,0],['H',0,1,0]],[[0,1,1],[0,2,1],[0,3,1]],{
+  state:'Gas',mp:-78,bp:-33,sol:'Very soluble (makes an alkaline solution)',cond:'The gas does not conduct',shape:'Trigonal pyramidal, about 107°',polarity:'Polar molecule',
+  chem:['Hydrogen bonding between molecules makes it easy to liquefy.','A weak base: the lone pair on nitrogen accepts H⁺ to form NH₄⁺.','Made on a huge scale in the Haber process (N₂ + 3H₂ ⇌ 2NH₃) for fertiliser.']}));
+reg('H','P',MOL('PH3','Phosphine','nonpolar',[['P',0,0,1],['H',.94,.34,0],['H',-.94,.34,0],['H',0,1,0]],[[0,1,1],[0,2,1],[0,3,1]],{
+  state:'Gas',mp:-133,bp:-88,sol:'Slightly soluble',cond:'The gas does not conduct',shape:'Trigonal pyramidal, about 93.5°',polarity:'Very slightly polar (tiny ΔEN, but the shape is not symmetrical)',
+  why:'Phosphorus and hydrogen have almost the same electronegativity (2.19 and 2.20), so the bonds are close to purely non-polar.',
+  chem:['Toxic, with a smell of garlic or rotting fish.','A much weaker base than NH₃, and it does not hydrogen-bond, so its boiling point is lower.']}));
+reg('C','H',
+  MOL('CH4','Methane','nonpolar',[['C',0,0,0],['H',-.7,-.7,0],['H',.7,-.7,0],['H',-.7,.7,0],['H',.7,.7,0]],[[0,1,1],[0,2,1],[0,3,1],[0,4,1]],{
+    state:'Gas',mp:-182,bp:-162,sol:'Insoluble',cond:GAS_COND,shape:'Tetrahedral, 109.5° (drawn flat here)',polarity:'Non-polar molecule',
+    chem:['The main component of natural gas; burns to make carbon dioxide and water.','A greenhouse gas.','Only weak London forces act between molecules, so it boils at a very low temperature.']}),
+  MOL('C2H6','Ethane','nonpolar',[['C',-.6,0,0],['C',.6,0,0],['H',-.6,-1,0],['H',-.6,1,0],['H',-1.6,0,0],['H',.6,-1,0],['H',.6,1,0],['H',1.6,0,0]],[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[1,5,1],[1,6,1],[1,7,1]],{
+    state:'Gas',mp:-182,bp:-89,sol:'Insoluble',cond:GAS_COND,shape:'Tetrahedral around each carbon',polarity:'Non-polar molecule',
+    chem:['An alkane: saturated, with only single bonds, so it is fairly unreactive apart from burning.','Burns to make carbon dioxide and water.']}),
+  MOL('C2H4','Ethene','nonpolar',[['C',-.65,0,0],['C',.65,0,0],['H',-1.25,-.85,0],['H',-1.25,.85,0],['H',1.25,-.85,0],['H',1.25,.85,0]],[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{
+    state:'Gas',mp:-169,bp:-104,sol:'Insoluble',cond:GAS_COND,shape:'Flat, 120° around each carbon',polarity:'Non-polar molecule',
+    chem:['An alkene: the C=C double bond is an electron-rich region that reacts with bromine water and decolourises it.','The starting material (monomer) for poly(ethene).']}),
+  MOL('C2H2','Ethyne','nonpolar',[['H',-1.95,0,0],['C',-.65,0,0],['C',.65,0,0],['H',1.95,0,0]],[[0,1,1],[1,2,3],[2,3,1]],{
+    state:'Gas',mb:'Sublimes at −84 °C at normal pressure',sol:'Slightly soluble',cond:GAS_COND,shape:'Linear',polarity:'Non-polar molecule',
+    chem:['An alkyne with a C≡C triple bond; it burns with a very hot flame (used in oxy-acetylene welding).','Decolourises bromine water.']}));
+reg('C','O',
+  MOL('CO2','Carbon dioxide','polar',[['O',-1.25,0,2],['C',0,0,0],['O',1.25,0,2]],[[0,1,2],[1,2,2]],{
+    state:'Gas',mb:'Sublimes at −78.5 °C at normal pressure (it does not melt)',sol:'Slightly soluble (makes weakly acidic carbonic acid)',cond:GAS_COND,shape:'Linear, 180°',
+    polarity:'Non-polar molecule: the two C=O bond dipoles point in opposite directions and cancel',
+    chem:['An acidic oxide: dissolves in water to make carbonic acid.','Turns limewater cloudy (calcium carbonate forms).','Solid CO₂ is “dry ice”, which sublimes instead of melting.','A greenhouse gas.']}),
+  MOL('CO','Carbon monoxide','polar',[['C',-.6,0,1],['O',.6,0,1]],[[0,1,3]],{
+    state:'Gas',mp:-205,bp:-192,sol:'Slightly soluble',cond:GAS_COND,shape:'Linear (two atoms)',polarity:'Only slightly polar overall',
+    why:'One of the three bonds is a dative (coordinate) covalent bond, where oxygen supplies both electrons of the pair.',
+    chem:['Toxic: it binds to haemoglobin far more strongly than oxygen does.','Forms from incomplete combustion.','Burns to CO₂ and acts as a reducing agent (used in the blast furnace).']}));
+reg('C','Cl',MOL('CCl4','Tetrachloromethane','polar',[['C',0,0,0],['Cl',-.95,-.95,3],['Cl',.95,-.95,3],['Cl',-.95,.95,3],['Cl',.95,.95,3]],[[0,1,1],[0,2,1],[0,3,1],[0,4,1]],{
+  state:'Liquid',mp:-23,bp:77,sol:'Insoluble',cond:GAS_COND,shape:'Tetrahedral, 109.5° (drawn flat here)',polarity:'Non-polar molecule: four equal polar bonds in a symmetrical shape cancel out',
+  chem:['A good solvent for non-polar substances such as fats and oils, but now rarely used because it is toxic and damages the ozone layer.','Does not burn and does not react with water.']}));
+reg('O','S',
+  MOL('SO2','Sulfur dioxide','polar',[['S',0,0,1],['O',-1.1,.65,2],['O',1.1,.65,2]],[[0,1,2],[0,2,2]],{
+    state:'Gas',mp:-72,bp:-10,sol:'Very soluble (makes sulfurous acid)',cond:'The gas does not conduct',shape:'Bent, about 119°',polarity:'Polar molecule',
+    chem:['An acidic oxide: it causes acid rain when it dissolves in rainwater.','A colourless gas with a choking smell; used as a food preservative (E220).','Oxidised to SO₃ in the Contact process.']}),
+  MOL('SO3','Sulfur trioxide','polar',[['S',0,0,0],['O',0,-1.2,2],['O',1.04,.6,2],['O',-1.04,.6,2]],[[0,1,2],[0,2,2],[0,3,2]],{
+    state:'Liquid',mp:17,bp:45,sol:'Reacts violently with water',cond:'Does not conduct',shape:'Trigonal planar, 120°',polarity:'Non-polar molecule: three equal polar bonds in a symmetrical shape cancel out',
+    chem:['Reacts violently with water to make sulfuric acid (H₂SO₄).','In the Contact process it is dissolved in concentrated sulfuric acid rather than water, because the direct reaction is too violent.']}));
+reg('N','O',MOL('NO2','Nitrogen dioxide','polar',[['N',0,0,0],['O',-1.1,.7,2],['O',1.1,.7,3]],[[0,1,2],[0,2,1]],{
+  state:'Gas (brown)',mp:-11,bp:21,sol:'Reacts with water',cond:'Does not conduct',shape:'Bent, about 134°',polarity:'Polar molecule',
+  why:'Nitrogen is left with a single unpaired electron, so this diagram is an approximation: the real bonding is delocalised.',
+  chem:['A brown, toxic gas and a component of smog.','Two molecules join to form colourless N₂O₄ when cooled, because of the unpaired electron.','Reacts with water to give nitric acid, adding to acid rain.']}));
+reg('Cl','P',MOL('PCl3','Phosphorus trichloride','polar',[['P',0,0,1],['Cl',.94,.34,3],['Cl',-.94,.34,3],['Cl',0,1,3]],[[0,1,1],[0,2,1],[0,3,1]],{
+  state:'Liquid',mp:-94,bp:76,sol:'Reacts with water',cond:'Does not conduct',shape:'Trigonal pyramidal, about 100°',polarity:'Polar molecule',
+  chem:['Fumes in moist air: reacts with water to make phosphorous acid and HCl gas.','Used to make other phosphorus compounds.']}));
+reg('B','F',MOL('BF3','Boron trifluoride','polar',[['B',0,0,0],['F',0,-1.15,3],['F',1,.58,3],['F',-1,.58,3]],[[0,1,1],[0,2,1],[0,3,1]],{
+  state:'Gas',mp:-127,bp:-100,sol:'Reacts with water',cond:GAS_COND,shape:'Trigonal planar, 120°',polarity:'Non-polar molecule (symmetrical)',
+  why:'The electronegativity difference (1.94) is large, but boron is a non-metal, so the atoms share electrons. The bonds are polar covalent, not ionic.',
+  chem:['Boron has only 6 electrons in its outer shell, so BF₃ is a Lewis acid: it accepts a lone pair.','Reacts with ammonia to form a compound with a dative bond from N to B.']}));
+reg('Cl','Si',MOL('SiCl4','Silicon tetrachloride','polar',[['Si',0,0,0],['Cl',-.95,-.95,3],['Cl',.95,-.95,3],['Cl',-.95,.95,3],['Cl',.95,.95,3]],[[0,1,1],[0,2,1],[0,3,1],[0,4,1]],{
+  state:'Liquid',mp:-69,bp:58,sol:'Reacts violently with water',cond:'Does not conduct',shape:'Tetrahedral, 109.5° (drawn flat here)',polarity:'Non-polar molecule (symmetrical)',
+  chem:['Fumes in moist air: it reacts with water to make silicon dioxide and steamy HCl gas.','Unlike CCl₄, the larger silicon atom can accept a lone pair from water, so the reaction can start.']}));
+reg('Al','Cl',MOL('AlCl3','Aluminium chloride','polar',[['Al',0,0,0],['Cl',0,-1.15,3],['Cl',1,.58,3],['Cl',-1,.58,3]],[[0,1,1],[0,2,1],[0,3,1]],{
+  state:'Solid',mb:'Sublimes at about 180 °C at normal pressure',sol:'Reacts violently with water',cond:'Poor even when molten, unlike typical ionic compounds',
+  shape:'Trigonal planar as a single molecule; the vapour is mostly Al₂Cl₆ pairs',polarity:'Non-polar molecule (symmetrical)',
+  why:'The electronegativity difference (1.55) is fairly small and the small Al³⁺ would distort a chloride ion strongly, so the bonding is mainly covalent, not ionic.',
+  chem:['Fumes in moist air and reacts violently with water, making HCl gas.','Electron-deficient: a Lewis acid, used as a catalyst in Friedel–Crafts reactions.']}));
+
+/* Covalent: giant structures */
+var NET_DIAMOND=[['C',0,0,0],['C',-.9,-.9,0],['C',.9,-.9,0],['C',-.9,.9,0],['C',.9,.9,0],['C',-1.8,-1.8,0,1],['C',1.8,-1.8,0,1],['C',-1.8,1.8,0,1],['C',1.8,1.8,0,1]];
+var NET_BONDS=[[0,1,1],[0,2,1],[0,3,1],[0,4,1],[1,5,1],[2,6,1],[3,7,1],[4,8,1]];
+reg('C','C',
+  MOL('C','Diamond','network',NET_DIAMOND,NET_BONDS,{
+    state:'Solid',mb:'Extremely high (above about 3500 °C)',sol:'Insoluble',cond:'Does not conduct: every outer electron is locked in a bond',
+    struct:'Giant covalent lattice: every carbon is bonded to 4 others in a tetrahedral arrangement',
+    chem:['The hardest natural substance, so it is used on cutting tools.','An excellent conductor of heat despite being an electrical insulator.','Burns in oxygen at very high temperature to make CO₂.']}),
+  MOL('C','Graphite','network',[['C',0,1,0],['C',.866,.5,0],['C',.866,-.5,0],['C',0,-1,0],['C',-.866,-.5,0],['C',-.866,.5,0],['C',1.732,1,0],['C',2.598,.5,0],['C',2.598,-.5,0],['C',1.732,-1,0]],
+    [[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,0,1],[1,6,1],[6,7,1],[7,8,1],[8,9,1],[9,2,1]],{
+    state:'Solid',mb:'Extremely high (sublimes at about 3650 °C)',sol:'Insoluble',cond:'Conducts electricity: each carbon has one delocalised electron that can move along the layers',
+    struct:'Giant covalent layers: each carbon is bonded to 3 others in flat hexagonal sheets, with weak forces between the sheets',
+    chem:['Soft and slippery because the layers slide over each other; used in pencils and as a lubricant.','Used for electrodes because it conducts.','Burns in oxygen to make CO₂.']}));
+reg('Si','Si',MOL('Si','Silicon','network',NET_DIAMOND.map(function(a){return ['Si',a[1],a[2],0,a[4]];}),NET_BONDS,{
+  state:'Solid',mp:1414,bp:3265,sol:'Insoluble',cond:'A semiconductor: conducts weakly, and better when warm or doped',
+  struct:'Giant covalent lattice with the same arrangement as diamond',
+  chem:['A shiny grey solid used in computer chips and solar cells.','Fairly unreactive at room temperature because a thin oxide layer forms on its surface.']}));
+reg('O','Si',MOL('SiO2','Silicon dioxide','network',[['Si',0,0,0],['O',-.9,-.9,2],['O',.9,-.9,2],['O',-.9,.9,2],['O',.9,.9,2],['Si',-1.8,-1.8,0,1],['Si',1.8,-1.8,0,1],['Si',-1.8,1.8,0,1],['Si',1.8,1.8,0,1]],NET_BONDS,{
+  state:'Solid',mp:1713,bp:2230,sol:'Insoluble',cond:'Does not conduct: no free electrons or ions',
+  struct:'Giant covalent lattice: each Si is bonded to 4 O, and each O to 2 Si',
+  chem:['Very hard and unreactive: sand, quartz and glass are mostly SiO₂.','An acidic oxide: reacts with hot concentrated alkali but not with water.','Attacked by hydrofluoric acid, which is why that acid etches glass.']}));
+
+/* Alloys */
+reg('Cu','Zn',{f:'Brass',name:'Brass (copper and zinc)',type:'metallic',metals:['Cu','Zn'],
+  state:'Solid',mp:'About 900–940 °C, depending on the mix',bp:null,sol:'Insoluble',cond:'Good conductor, but not as good as pure copper',
+  struct:'Metal lattice containing two sizes of atom',
+  why:'Zinc atoms are a different size from copper atoms, so the regular layers are disturbed and cannot slide over each other as easily.',
+  chem:['Harder and stronger than pure copper.','Resists corrosion; used for taps, instruments and door fittings.','Typically about 60–70% copper.']});
+reg('Cu','Sn',{f:'Bronze',name:'Bronze (copper and tin)',type:'metallic',metals:['Cu','Sn'],
+  state:'Solid',mp:'About 950 °C, depending on the mix',bp:null,sol:'Insoluble',cond:'Fairly good conductor',
+  struct:'Metal lattice containing two sizes of atom',
+  why:'Tin atoms are bigger than copper atoms, which distorts the layers and makes them harder to slide.',
+  chem:['Harder and tougher than pure copper; used for statues, bells and ship propellers.','Gave its name to the Bronze Age.']});
+reg('Cr','Fe',{f:'Stainless steel',name:'Stainless steel (iron and chromium)',type:'metallic',metals:['Fe','Cr'],
+  state:'Solid',mp:'About 1400–1530 °C, depending on the mix',bp:null,sol:'Insoluble',cond:'Conducts, but less well than copper',
+  struct:'Metal lattice containing two sizes of atom',
+  why:'Chromium atoms of a different size disturb the iron layers, and the chromium also forms a protective surface layer.',
+  chem:['At least 10.5% chromium forms a thin, self-healing oxide layer, so it does not rust.','Used in cutlery, sinks and surgical tools.']});
+reg('C','Fe',{f:'Steel',name:'Steel (iron and carbon)',type:'metallic',metals:['Fe'],inter:'C',
+  state:'Solid',mp:'About 1370–1540 °C, depending on the carbon content',bp:null,sol:'Insoluble',cond:'Conducts, but less well than copper',
+  struct:'Iron lattice with small carbon atoms sitting in the gaps',
+  why:'Small carbon atoms sit in the gaps between iron atoms, so the layers of iron cannot slide over each other easily.',
+  chem:['Harder and stronger than pure iron.','More carbon gives harder but more brittle steel; low-carbon (mild) steel is easier to shape.']});
+reg('Pb','Sn',{f:'Solder',name:'Solder (tin and lead)',type:'metallic',metals:['Sn','Pb'],
+  state:'Solid',mp:'About 183 °C for the classic 63% tin / 37% lead mix',bp:null,sol:'Insoluble',cond:'Conducts',
+  struct:'Metal lattice containing two sizes of atom',
+  why:'Mixing the two metals lowers the melting point well below that of either metal alone (tin 232 °C, lead 327 °C).',
+  chem:['Melts easily, so it joins electronic components without damaging them.','Lead-free solders are now common because lead is toxic.']});
+
+/* ---------- Fallback predictions ---------- */
+var MD={Li:[181,1342],Na:[98,883],K:[63,759],Mg:[650,1090],Ca:[842,1484],Al:[660,2519],Fe:[1538,2862],Cu:[1085,2562],Zn:[420,907],Ag:[962,2162],Au:[1064,2856],Hg:[-39,357],Pb:[327,1749],Sn:[232,2602]};
+var MCHEM={
+  alk:['Very reactive: stored under oil, and reacts with water to make a hydroxide and hydrogen.','Soft, with a low density and a low melting point for a metal.'],
+  ake:['Reactive, but less than group 1: reacts with oxygen, and with water or steam.','Harder and higher melting than the group 1 metals.'],
+  tm:['Typically hard and dense, with high melting points.','Often make coloured compounds, ions with different charges, and good catalysts.'],
+  ptm:['Softer and lower melting than the transition metals.','Generally less reactive than the s-block metals.'],
+  lan:['Reactive metals that tarnish in air.'],act:['Reactive, radioactive metals.']
+};
+var CH={Li:1,Na:1,K:1,Rb:1,Cs:1,Fr:1,Be:2,Mg:2,Ca:2,Sr:2,Ba:2,Ra:2,Al:3,Ga:3,In:3,Zn:2,Cd:2,Ag:1,Ni:2,Co:2,Mn:2,Cr:3,Fe:3,Cu:2,Pb:2,Sn:2,Hg:2};
+var SBLOCK={alk:1,ake:1};
+var AN={H:-1,N:-3,P:-3,O:-2,S:-2,Se:-2,F:-1,Cl:-1,Br:-1,I:-1};
+var STEM={B:'boride',C:'carbide',Si:'silicide',As:'arsenide',Te:'telluride',At:'astatide',H:'hydride',N:'nitride',P:'phosphide',O:'oxide',S:'sulfide',Se:'selenide',F:'fluoride',Cl:'chloride',Br:'bromide',I:'iodide'};
+var ROMAN={1:'I',2:'II',3:'III',4:'IV'};
+var GREEK=['','mono','di','tri','tetra','penta','hexa'];
+var V={H:1,B:3,C:4,N:3,O:2,F:1,Si:4,P:3,S:2,Cl:1,Br:1,I:1,Se:2,As:3,Ge:4,Te:2,At:1};
+var VE={H:1,B:3,C:4,N:5,O:6,F:7,Si:4,P:5,S:6,Cl:7,Br:7,I:7,Se:6,As:5,Ge:4,Te:6,At:7};
+
+function ionicFallback(m,n){
+  var cc=CH[m.s],ac=AN[n.s];
+  if(!cc||!ac) return none('This pairing is not in the library yet, and its charges are not simple enough to predict.');
+  if((n.s==='H'||n.s==='N'||n.s==='P')&&!SBLOCK[m.c]&&m.s!=='Al') return none('This pairing is not in the library yet, and it is unlikely to form a simple compound.');
+  var c=cc,a=Math.abs(ac),g=gcd(c,a),nC=a/g,nA=c/g;
+  var f=m.s+(nC>1?nC:'')+n.s+(nA>1?nA:'');
+  var cname=m.n+((m.c==='tm'||m.s==='Sn'||m.s==='Pb')?'('+ROMAN[c]+')':'');
+  var d=dEN(m,n);
+  return {f:f,name:cname+' '+STEM[n.s],type:'ionic',predicted:true,ions:[I(m.s,c,nC),I(n.s,ac,nA)],
+    state:'Solid',mp:'High (usually several hundred °C or more)',bp:'Very high',
+    sol:'Varies: many ionic compounds dissolve in water, but some do not',
+    why:d<1.5?'The electronegativity difference is fairly small, so expect some covalent character as well.':'',
+    chem:['Breaks into ions when it dissolves in water (if it is soluble).','Brittle: a blow shifts the layers of ions so that like charges line up and repel.']};
+}
+function metalFallback(a,b){
+  if(a.s===b.s){
+    var m=MD[a.s],st=m&&m[0]<25?'Liquid':'Solid';
+    var chem=(MCHEM[a.c]||[]).concat(['Malleable and ductile: layers of ions slide over each other without breaking the metallic bond.']);
+    return {f:a.s,name:a.n+' (metal)',type:'metallic',metals:[a.s],predicted:false,
+      state:st,mp:m?m[0]:'Varies with the metal',bp:m?m[1]:null,sol:'Insoluble',cond:'Excellent conductor of heat and electricity',chem:chem};
+  }
+  return {f:'Alloy',name:a.n+' and '+b.n+' alloy',type:'metallic',metals:[a.s,b.s],predicted:true,
+    state:'Solid',mp:'Depends on the proportions of each metal',sol:'Insoluble',cond:'Conducts heat and electricity',
+    struct:'Metal lattice containing two sizes of atom',
+    why:'Two different metals do not usually form a compound. They mix into an alloy, and the different-sized atoms disturb the layers.',
+    chem:['Alloys are usually harder than the pure metals because the layers cannot slide as easily.']};
+}
+function covFallback(a,b){
+  if(a.s===b.s) return none('Pure '+a.n.toLowerCase()+' forms larger structures than this version can draw.');
+  if(!V[a.s]||!V[b.s]) return none('This pairing is not in the library yet, and its bonding is not simple enough to predict.');
+  var c,l;
+  if(a.s==='H'){c=b;l=a;} else if(b.s==='H'){c=a;l=b;} else {c=a.en<=b.en?a:b;l=c===a?b:a;}
+  var k=V[l.s];
+  if(V[c.s]%k!==0) return none('These two elements can form several different compounds, and this version only predicts the simplest case.');
+  var n=V[c.s]/k,lpc=(VE[c.s]-V[c.s])/2,lpl=(VE[l.s]-k)/2;
+  if(lpc<0||lpl<0||lpc%1||lpl%1) return none('This pairing is not in the library yet.');
+  var d=dEN(a,b);
+  var hFirst=(a.s==='H'||b.s==='H')&&['O','S','Se','Te','F','Cl','Br','I','At'].indexOf((a.s==='H'?b:a).s)>-1;
+  var first=hFirst?EL.H:c, second=first===c?l:c;
+  var cnt={};cnt[c.s]=1;cnt[l.s]=n;
+  var f=first.s+(cnt[first.s]>1?cnt[first.s]:'')+second.s+(cnt[second.s]>1?cnt[second.s]:'');
+  var name;
+  if(first.s==='H'&&hFirst){
+    name='Hydrogen '+(STEM[second.s]||second.n.toLowerCase());
+  } else {
+    var stem=STEM[second.s]||(second.n.toLowerCase()+'ide');
+    var pre1=cnt[first.s]>1?GREEK[cnt[first.s]]:'';
+    var pre2=cnt[second.s]>1?GREEK[cnt[second.s]]:'mono';
+    if(/^[aeiou]/.test(stem)&&/[ao]$/.test(pre2))pre2=pre2.slice(0,-1);
+    name=(pre1+first.n.toLowerCase());
+    name=name.charAt(0).toUpperCase()+name.slice(1)+' '+pre2+stem;
+  }
+  var shape='Not worked out for this shape';
+  if(n===1)shape='Linear (two atoms)';
+  else if(n===2)shape=lpc===0?'Linear, 180°':(lpc===1?'Bent, about 120°':'Bent, about 104.5°');
+  else if(n===3)shape=lpc===0?'Trigonal planar, 120°':'Trigonal pyramidal, about 107°';
+  else if(n===4)shape='Tetrahedral, 109.5° (drawn flat here)';
+  var LAY={
+    '2l':[[-1,0],[1,0]],'2b':[[-.78,.62],[.78,.62]],
+    '3':[[0,-1],[.87,.5],[-.87,.5]],'3p':[[.94,.34],[-.94,.34],[0,1]],
+    '4':[[-.7,-.7],[.7,-.7],[-.7,.7],[.7,.7]]
+  };
+  var atoms,bonds=[];
+  if(n===1){atoms=[[c.s,-.6,0,lpc],[l.s,.6,0,lpl]];bonds=[[0,1,k]];}
+  else{
+    var key=n===2?(lpc===1||lpc===2?'2b':'2l'):(n===3?(lpc===0?'3':'3p'):'4');
+    atoms=[[c.s,0,0,lpc]];
+    LAY[key].forEach(function(p,i){atoms.push([l.s,p[0],p[1],lpl]);bonds.push([0,i+1,k]);});
+  }
+  var type=classify(d); if(type==='ionic')type='polar';
+  var sym=(lpc===0&&n>=2);
+  var polarity=sym?'Non-polar molecule: the bond dipoles cancel by symmetry':(d>=0.4?'Polar molecule':'Very slightly polar or non-polar');
+  return {f:f,name:name,type:type,predicted:true,mol:{atoms:atoms,bonds:bonds},
+    state:'Gas, liquid or low-melting solid (typical of simple molecules)',mp:'Low',bp:'Low',
+    sol:'Varies: polar molecules dissolve in water more easily than non-polar ones',cond:GAS_COND,shape:shape,polarity:polarity,
+    why:d>=1.7?'The electronegativity difference is high, but two non-metals share electrons rather than transfer them, so the bonds are still covalent.':'',
+    chem:['The bonds inside each molecule are strong; the weak forces between molecules decide the melting and boiling points.']};
+}
+function resolve(a,b){
+  if(a.c==='ng'||b.c==='ng') return [none('Noble gases have full outer shells, so they almost never bond with other elements.')];
+  if(a.en==null||b.en==null) return [none('There is no electronegativity data for this element. It is too short-lived to measure.')];
+  var key=[a.s,b.s].sort().join('-');
+  if(DB[key]) return DB[key];
+  var ma=isMetal(a),mb=isMetal(b);
+  if(ma&&mb) return [metalFallback(a,b)];
+  if(ma!==mb) return [ionicFallback(ma?a:b,ma?b:a)];
+  return [covFallback(a,b)];
+}
+
+/* ---------- Diagrams ---------- */
+function catVar(s){return 'var(--c-'+EL[s].c+')';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function norm(a){return ((a%360)+360)%360;}
+function gap(occ){
+  if(!occ.length) return {mid:270,size:360};
+  var s=occ.map(norm).sort(function(x,y){return x-y;}),best={size:-1,mid:0};
+  for(var i=0;i<s.length;i++){
+    var a0=s[i],a1=i+1<s.length?s[i+1]:s[0]+360,sz=a1-a0;
+    if(sz>best.size)best={size:sz,mid:a0+sz/2};
+  }
+  return best;
+}
+function molSVG(mol){
+  var S=64,R=18,rad=Math.PI/180;
+  var A=mol.atoms.map(function(t){return {s:t[0],x:t[1]*S,y:t[2]*S,lp:t[3]||0,h:!!t[4],occ:[],dl:0,lps:[]};});
+  mol.bonds.forEach(function(b){
+    var p=A[b[0]],q=A[b[1]],ang=Math.atan2(q.y-p.y,q.x-p.x)/rad;
+    p.occ.push(ang);q.occ.push(ang+180);
+  });
+  A.forEach(function(a){
+    if(a.h||!a.lp)return;
+    var g=gap(a.occ),sp=Math.min(g.size/(a.lp+1),90);
+    for(var k=0;k<a.lp;k++)a.lps.push(g.mid+(k-(a.lp-1)/2)*sp);
+  });
+  mol.bonds.forEach(function(b){
+    var p=A[b[0]],q=A[b[1]];
+    if(p.h||q.h)return;
+    var d=dEN(EL[p.s],EL[q.s]);
+    if(d>=0.4){ if(EL[p.s].en>EL[q.s].en){p.dl--;q.dl++;}else{p.dl++;q.dl--;} }
+  });
+  var minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  A.forEach(function(a){minX=Math.min(minX,a.x);maxX=Math.max(maxX,a.x);minY=Math.min(minY,a.y);maxY=Math.max(maxY,a.y);});
+  var pad=46,W=Math.max(320,maxX-minX+pad*2),H=Math.max(180,maxY-minY+pad*2);
+  var cx=(minX+maxX)/2,cy=(minY+maxY)/2,vx=cx-W/2,vy=cy-H/2;
+  var svg='<svg class="dia" viewBox="'+vx+' '+vy+' '+W+' '+H+'" role="img" aria-label="Bond diagram">';
+  mol.bonds.forEach(function(b){
+    var p=A[b[0]],q=A[b[1]],o=b[2],dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,px=-uy,py=ux;
+    var offs=o===1?[0]:(o===2?[-3.6,3.6]:[-6.5,0,6.5]),faded=p.h||q.h;
+    offs.forEach(function(off){
+      svg+='<line x1="'+(p.x+px*off)+'" y1="'+(p.y+py*off)+'" x2="'+(q.x+px*off)+'" y2="'+(q.y+py*off)+'" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"'+(faded?' opacity=".35" stroke-dasharray="3 5"':'')+'/>';
+    });
+  });
+  A.forEach(function(a){
+    if(a.h)return;
+    var r=a.s==='H'?13:R;
+    svg+='<circle cx="'+a.x+'" cy="'+a.y+'" r="'+r+'" style="fill:'+catVar(a.s)+'" stroke="var(--ink)" stroke-width="1.6"/>';
+    svg+='<text x="'+a.x+'" y="'+a.y+'" dy=".35em" text-anchor="middle" font-family="Bricolage Grotesque,system-ui,sans-serif" font-weight="700" font-size="'+(a.s.length>1?14:16)+'" style="fill:var(--cell-ink)">'+a.s+'</text>';
+    a.lps.forEach(function(t){
+      var ux=Math.cos(t*rad),uy=Math.sin(t*rad),px=-uy,py=ux,ccx=a.x+ux*(R+8),ccy=a.y+uy*(R+8);
+      svg+='<circle cx="'+(ccx+px*3.3)+'" cy="'+(ccy+py*3.3)+'" r="2.4" fill="var(--lp)"/><circle cx="'+(ccx-px*3.3)+'" cy="'+(ccy-py*3.3)+'" r="2.4" fill="var(--lp)"/>';
+    });
+    if(a.dl!==0){
+      var g=gap(a.occ.concat(a.lps)),t=g.mid*rad;
+      svg+='<text x="'+(a.x+Math.cos(t)*(R+16))+'" y="'+(a.y+Math.sin(t)*(R+16))+'" dy=".35em" text-anchor="middle" font-size="14" font-weight="700" style="fill:'+(a.dl<0?'var(--dneg)':'var(--dpos)')+'">'+(a.dl<0?'δ−':'δ+')+'</text>';
+    }
+  });
+  return svg+'</svg>';
+}
+function ionSVG(e){
+  var cat=e.ions[0],an=e.ions[1],seq=[],c=cat.n,a=an.n,t=an.n>=cat.n?1:0;
+  while(c>0||a>0){
+    if(t===1&&a>0){seq.push(an);a--;}
+    else if(t===0&&c>0){seq.push(cat);c--;}
+    else if(a>0){seq.push(an);a--;}
+    else{seq.push(cat);c--;}
+    t=1-t;
+  }
+  var rc=26,ra=36,gapPx=4,total=0;
+  seq.forEach(function(i){total+=2*(i.c>0?rc:ra);});total+=gapPx*(seq.length-1);
+  var W=Math.max(320,total+60),H=180,cy=92,x=(W-total)/2;
+  var svg='<svg class="dia" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Ion diagram">';
+  seq.forEach(function(i){
+    var r=i.c>0?rc:ra,cx=x+r;
+    svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" style="fill:'+catVar(i.s)+'" stroke="var(--ink)" stroke-width="1.8"/>';
+    svg+='<text x="'+cx+'" y="'+cy+'" dy=".35em" text-anchor="middle" font-family="Bricolage Grotesque,system-ui,sans-serif" font-weight="700" font-size="20" style="fill:var(--cell-ink)">'+i.s+'</text>';
+    var bx=cx+r*.72,by=cy-r*.72;
+    svg+='<circle cx="'+bx+'" cy="'+by+'" r="12" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>';
+    svg+='<text x="'+bx+'" y="'+by+'" dy=".35em" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--ink)">'+chg(i.c)+'</text>';
+    var ne=Math.abs(i.c);
+    if(i.c>0) svg+='<text x="'+cx+'" y="'+(cy-r-14)+'" text-anchor="middle" font-size="12.5" style="fill:var(--ink2)">loses '+ne+' e⁻</text>';
+    else svg+='<text x="'+cx+'" y="'+(cy+r+20)+'" text-anchor="middle" font-size="12.5" style="fill:var(--ink2)">gains '+ne+' e⁻</text>';
+    x+=2*r+gapPx;
+  });
+  return svg+'</svg>';
+}
+function metalSVG(e){
+  var W=340,H=210,cols=4,rows=3,dx=68,dy=58,x0=(W-(cols-1)*dx)/2,y0=(H-(rows-1)*dy)/2;
+  var m=e.metals,two=m.length>1,svg='<svg class="dia" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Metallic bonding diagram">';
+  var big=two&&EL[m[1]].z>EL[m[0]].z?1:0;
+  for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+    var idx=two?((c+r)%2):0,s=m[idx],rr=two?(idx===big?26:22):24,x=x0+c*dx,y=y0+r*dy;
+    svg+='<circle cx="'+x+'" cy="'+y+'" r="'+rr+'" style="fill:'+catVar(s)+'" stroke="var(--ink)" stroke-width="1.6"/>';
+    svg+='<text x="'+x+'" y="'+(y-1)+'" dy=".35em" text-anchor="middle" font-family="Bricolage Grotesque,system-ui,sans-serif" font-weight="700" font-size="15" style="fill:var(--cell-ink)">'+s+'</text>';
+    svg+='<text x="'+x+'" y="'+(y+13)+'" text-anchor="middle" font-size="10" font-weight="700" style="fill:var(--cell-ink)">+</text>';
+  }
+  if(e.inter){
+    [[0.5,0.5],[2.5,1.5]].forEach(function(p){
+      var x=x0+p[0]*dx,y=y0+p[1]*dy;
+      svg+='<circle cx="'+x+'" cy="'+y+'" r="10" style="fill:'+catVar(e.inter)+'" stroke="var(--ink)" stroke-width="1.4"/><text x="'+x+'" y="'+y+'" dy=".35em" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--cell-ink)">'+e.inter+'</text>';
+    });
+  }
+  var k=0;
+  for(var r2=0;r2<rows;r2++)for(var c2=0;c2<cols;c2++){
+    if(c2<cols-1)svg+=elec(x0+c2*dx+dx/2,y0+r2*dy,k++);
+    if(r2<rows-1)svg+=elec(x0+c2*dx,y0+r2*dy+dy/2,k++);
+  }
+  return svg+'</svg>';
+}
+function elec(x,y,k){
+  var ddx=((k*7)%9)-4,ddy=((k*5)%9)-4,delay=(k%7)*.35;
+  return '<circle class="e" cx="'+x+'" cy="'+y+'" r="3.2" fill="var(--lp)" style="--dx:'+ddx+'px;--dy:'+ddy+'px;animation-delay:-'+delay+'s"/>';
+}
+function diagram(e){
+  if(e.type==='ionic')return ionSVG(e);
+  if(e.type==='metallic')return metalSVG(e);
+  if(e.mol)return molSVG(e.mol);
+  return '';
+}
+function caption(e){
+  if(e.type==='ionic')return 'Ions are drawn as circles: the positive ions are smaller than the negative ions. Numbers show the electrons moved.';
+  if(e.type==='metallic')return 'Circles are positive metal ions. The red dots are delocalised electrons, free to move through the lattice.';
+  if(e.type==='network')return 'Every line is a shared pair of electrons. Faded lines show the structure continuing in every direction.';
+  return 'Lines are shared pairs of electrons (one, two or three lines for single, double or triple bonds). Red dots are lone pairs.';
+}
+
+/* ---------- Explanation text ---------- */
+function whyBond(e,a,b,d){
+  var t=[];
+  if(e.type==='ionic'){
+    var c=e.ions[0],n=e.ions[1],lose=Math.abs(c.c),gain=Math.abs(n.c);
+    t.push('Each '+EL[c.s].n.toLowerCase()+' atom gives away '+lose+' electron'+(lose>1?'s':'')+' and becomes '+ion(c)+'. Each '+EL[n.s].n.toLowerCase()+' atom takes '+gain+' electron'+(gain>1?'s':'')+' and becomes '+ion(n)+'.');
+    t.push('The strong electrostatic attraction between these oppositely charged ions, acting in every direction, is the ionic bond. It builds a giant lattice rather than separate molecules.');
+    if(c.n>1||n.n>1) t.push(c.n+' × '+ion(c)+' and '+n.n+' × '+ion(n)+' give a total charge of zero, which is why the formula is '+fmtF(e.f)+'.');
+  } else if(e.type==='metallic'){
+    t.push('Metal atoms release their outer electrons into a shared “sea”. The positive ions sit in a regular lattice, held together by their attraction to these delocalised electrons.');
+    t.push('Because the electrons can move, metals conduct. Because the layers of ions can slide without breaking that attraction, metals can be bent and shaped.');
+  } else if(e.type==='network'){
+    t.push('Every atom is joined to its neighbours by strong covalent bonds in all directions, forming one giant structure. There are no separate molecules, so a huge amount of energy is needed to break it apart.');
+  } else {
+    var cnt={1:0,2:0,3:0};
+    e.mol.bonds.forEach(function(bd){if(!e.mol.atoms[bd[0]][4]&&!e.mol.atoms[bd[1]][4])cnt[bd[2]]++;});
+    var parts=[];
+    if(cnt[1])parts.push(cnt[1]+' single bond'+(cnt[1]>1?'s':''));
+    if(cnt[2])parts.push(cnt[2]+' double bond'+(cnt[2]>1?'s':''));
+    if(cnt[3])parts.push(cnt[3]+' triple bond'+(cnt[3]>1?'s':''));
+    t.push('The atoms share pairs of electrons: '+parts.join(' and ')+'. Each shared pair is one covalent bond.');
+  }
+  if(e.type==='polar'||e.type==='nonpolar'||e.type==='network'){
+    if(a.s===b.s) t.push('Both atoms are the same element, so they pull on the shared electrons equally (ΔEN 0).');
+    else if(d>=0.4){
+      var hi=a.en>b.en?a:b,lo=hi===a?b:a;
+      t.push(hi.n+' is more electronegative than '+lo.n.toLowerCase()+' (ΔEN '+d+'), so it pulls the shared electrons towards itself. It becomes slightly negative (δ−) and '+lo.n.toLowerCase()+' slightly positive (δ+).');
+    } else t.push(a.n+' and '+b.n.toLowerCase()+' have almost the same electronegativity (ΔEN '+d+'), so the electrons are shared about equally.');
+  }
+  return t;
+}
+function row(k,v){return v?'<div class="r"><dt>'+k+'</dt><dd>'+v+'</dd></div>':'';}
+function props(e){
+  var defCond=e.type==='ionic'?'Does not conduct as a solid; conducts when molten or dissolved':(e.type==='metallic'?'Conducts (delocalised electrons)':GAS_COND);
+  var defStruct=e.type==='ionic'?'Giant ionic lattice':(e.type==='metallic'?'Lattice of positive ions in a sea of delocalised electrons':(e.type==='network'?'':'Simple molecules: strong covalent bonds inside each molecule, weak forces between molecules'));
+  var h='<dl class="props">';
+  h+=row('State at room temperature',e.state);
+  h+=row('Melting point',fmtT(e.mp));
+  h+=row('Boiling point',fmtT(e.bp));
+  h+=row('Melting and boiling',e.mb);
+  h+=row('In water',e.sol);
+  h+=row('Conducts electricity?',e.cond||defCond);
+  h+=row('Shape',e.shape);
+  h+=row('Polarity',e.polarity);
+  h+=row('Structure',e.struct||defStruct);
+  return h+'</dl>';
+}
+
+/* ---------- UI state ---------- */
+var picks=[],state={list:null,idx:0,open:false};
+var $=function(id){return document.getElementById(id);};
+
+function buildTable(){
+  var pt=$('pt'),h='';
+  LIST.forEach(function(e){
+    var p=pos(e.z);
+    h+='<button class="el" type="button" data-act="pick" data-s="'+e.s+'" aria-pressed="false" aria-label="'+e.n+'" title="'+e.n+'" style="grid-row:'+p[0]+';grid-column:'+p[1]+';--cat:var(--c-'+e.c+')"><span class="n">'+e.z+'</span><span class="s">'+e.s+'</span></button>';
+  });
+  h+='<div class="ph" style="grid-row:6;grid-column:3;--cat:var(--c-lan)" aria-hidden="true">57–71</div>';
+  h+='<div class="ph" style="grid-row:7;grid-column:3;--cat:var(--c-act)" aria-hidden="true">89–103</div>';
+  pt.insertAdjacentHTML('beforeend',h);
+  var lg='';
+  Object.keys(CATNAME).forEach(function(k){lg+='<li style="--cat:var(--c-'+k+')"><i></i>'+CATNAME[k]+'</li>';});
+  $('legend').innerHTML=lg;
+}
+function slotHTML(i){
+  var s=picks[i];
+  if(!s) return '<div class="slot">'+(i===0?'Tap a first element':'Tap a second element')+'</div>';
+  var e=EL[s];
+  return '<div class="slot filled" style="--cat:var(--c-'+e.c+')"><button class="x" type="button" data-act="remove" data-i="'+i+'" aria-label="Remove '+e.n+'">×</button><span class="big">'+e.s+'</span><span class="nm">'+e.n+'</span><span class="meta">'+(e.en!=null?'Electronegativity '+e.en:'No electronegativity data')+'</span></div>';
+}
+function quickHTML(){
+  var pairs=[['Na','Cl'],['H','O'],['C','O'],['Mg','O'],['C','H'],['Fe','O']],h='<div class="quick"><p>Not sure where to start? Try one of these.</p><div class="chips">';
+  pairs.forEach(function(p){h+='<button class="chip" type="button" data-act="quick" data-a="'+p[0]+'" data-b="'+p[1]+'">'+p[0]+' + '+p[1]+'</button>';});
+  return h+'</div></div>';
+}
+function gaugeHTML(a,b,d){
+  var hi=a.en>=b.en?a:b,lo=hi===a?b:a,pct=Math.min(d/3.3,1)*100;
+  return '<div class="gauge"><div class="track"><span class="seg np"></span><span class="seg po"></span><span class="seg io"></span><i class="mark" style="left:'+pct+'%"></i></div><div class="gl"><span>Non-polar</span><span>Polar</span><span>Ionic</span></div><p class="den">ΔEN = '+d+' ('+hi.s+' '+hi.en+' − '+lo.s+' '+lo.en+')</p></div>';
+}
+function renderResult(){
+  var box=$('result');
+  if(!state.list){box.innerHTML=quickHTML();return;}
+  var L=state.list,e=L[state.idx],a=EL[picks[0]],b=EL[picks[1]];
+  if(e.none){box.innerHTML='<div class="result"><div class="card"><p>'+e.msg+'</p></div></div>';return;}
+  var T=TYPES[e.type],d=dEN(a,b),h='<div class="result">';
+  h+='<div class="head"><div><div class="formula'+(e.f.length>8?' long':'')+'">'+fmtF(e.f)+'</div><div class="cname">'+e.name+'</div></div><span class="pill" style="--t:var('+T.v+')">'+T.label+'</span></div>';
+  if(L.length>1){
+    h+='<div class="chips" role="group" aria-label="Possible compounds">';
+    L.forEach(function(x,i){h+='<button class="chip" type="button" data-act="alt" data-i="'+i+'" aria-pressed="'+(i===state.idx)+'">'+fmtF(x.f)+(x.name?' ('+x.name.replace(/ \(.*\)/,'')+')':'')+'</button>';});
+    h+='</div>';
+  }
+  if(e.predicted) h+='<p class="note">This is a prediction from typical charges and valencies, not a checked entry in the compound library. Treat the details as a guide.</p>';
+  h+=diagram(e)+'<p class="cap">'+caption(e)+'</p>';
+  if(e.type!=='metallic') h+=gaugeHTML(a,b,d);
+  h+='<button class="btn" type="button" data-act="explain" aria-expanded="'+state.open+'">'+(state.open?'Hide explanation':'Explain this compound')+'</button>';
+  if(state.open){
+    var why=whyBond(e,a,b,d);
+    h+='<div class="details" id="details"><section><h3>How the atoms are held together</h3>';
+    why.forEach(function(p){h+='<p>'+p+'</p>';});
+    if(e.why)h+='<p>'+e.why+'</p>';
+    h+='</section><section><h3>Physical properties</h3>'+props(e)+'</section>';
+    if(e.chem&&e.chem.length){h+='<section><h3>Chemical characteristics</h3><ul>';e.chem.forEach(function(c){h+='<li>'+c+'</li>';});h+='</ul></section>';}
+    h+='</div>';
+  }
+  box.innerHTML=h+'</div>';
+}
+function update(){
+  document.querySelectorAll('#pt .el').forEach(function(b){b.setAttribute('aria-pressed',picks.indexOf(b.dataset.s)>-1?'true':'false');});
+  $('slots').innerHTML=slotHTML(0)+'<span class="plus" aria-hidden="true">+</span>'+slotHTML(1);
+  $('combine').disabled=picks.length<2;
+  renderResult();
+}
+function pick(s){
+  picks.push(s);if(picks.length>2)picks.shift();
+  state.list=null;update();
+}
+function reduced(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
+function combine(){
+  if(picks.length<2)return;
+  state.list=resolve(EL[picks[0]],EL[picks[1]]);state.idx=0;state.open=false;
+  update();
+  var r=$('result');
+  if(r&&r.scrollIntoView)r.scrollIntoView({behavior:reduced()?'auto':'smooth',block:'nearest'});
+}
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest&&ev.target.closest('[data-act]');
+  if(!t)return;
+  var act=t.dataset.act;
+  if(act==='pick')pick(t.dataset.s);
+  else if(act==='remove'){picks.splice(+t.dataset.i,1);state.list=null;update();}
+  else if(act==='combine')combine();
+  else if(act==='clear'){picks.length=0;state.list=null;update();}
+  else if(act==='alt'){state.idx=+t.dataset.i;renderResult();}
+  else if(act==='quick'){picks.splice(0,picks.length,t.dataset.a,t.dataset.b);combine();}
+  else if(act==='explain'){
+    state.open=!state.open;renderResult();
+    var d=$('details');
+    if(d&&d.scrollIntoView)d.scrollIntoView({behavior:reduced()?'auto':'smooth',block:'start'});
+  }
+});
+
+
+
+/* =====================================================================
+   BUILD MODE
+   ===================================================================== */
+var BL=46, HL=0.7, SNAP=1.5*BL, TAU=Math.PI*2;
+var DISPF="'Bricolage Grotesque',system-ui,sans-serif", BODYF="'Instrument Sans',system-ui,sans-serif";
+
+/* Model-kit (CPK) colours: [fill, text] */
+var CPK={H:['#FFFFFF','#14222E'],C:['#3B4148','#FFFFFF'],N:['#2F5BD3','#FFFFFF'],O:['#DD3B2E','#FFFFFF'],F:['#93D45A','#14222E'],
+  Cl:['#2E9E4E','#FFFFFF'],Br:['#8E2C1E','#FFFFFF'],I:['#6A2C91','#FFFFFF'],S:['#F2C230','#14222E'],P:['#F08B25','#14222E'],
+  B:['#F5B9A9','#14222E'],Si:['#D7BA8E','#14222E'],Li:['#B37FE8','#14222E'],Na:['#8C5BD6','#FFFFFF'],K:['#6F43BF','#FFFFFF'],
+  Mg:['#3F9E62','#FFFFFF'],Ca:['#5E9C57','#FFFFFF'],Al:['#AEB0BF','#14222E'],Fe:['#C4672E','#FFFFFF'],Cu:['#C98A4A','#14222E'],
+  Zn:['#8E95B6','#14222E'],Ag:['#C3C6CC','#14222E'],Au:['#D6B23A','#14222E'],Pb:['#5F6570','#FFFFFF']};
+function cpk(s){
+  if(CPK[s])return CPK[s];
+  var e=EL[s];
+  if(!e)return ['#E88FD4','#14222E'];
+  if(e.c==='ng')return ['#86D6E6','#14222E'];
+  if(isMetal(e))return ['#A3ABB5','#14222E'];
+  return ['#E88FD4','#14222E'];
+}
+
+/* Allowed numbers of bonds */
+var VALS={H:[1],B:[3],C:[4],N:[3],O:[2],F:[1],Si:[4],P:[3,5],S:[2,4,6],Cl:[1],Ge:[4],As:[3,5],Se:[2,4,6],Br:[1],Sb:[3,5],Te:[2,4,6],I:[1],At:[1],Sn:[2,4],Pb:[2,4]};
+var EXPAND={S:1,P:1,Se:1,As:1,Te:1,Sb:1};
+function vals(s){
+  if(VALS[s])return VALS[s];
+  var e=EL[s];
+  if(!e||e.c==='ng'||e.en==null)return [0];
+  if(CH[s])return [Math.abs(CH[s])];
+  if(isMetal(e))return [2];
+  return [0];
+}
+function maxV(s){var v=vals(s);return v[v.length-1];}
+
+var MASS={H:1.008,He:4.003,Li:6.94,Be:9.012,B:10.81,C:12.011,N:14.007,O:15.999,F:18.998,Ne:20.18,Na:22.99,Mg:24.305,Al:26.982,Si:28.085,P:30.974,S:32.06,Cl:35.45,Ar:39.95,K:39.098,Ca:40.078,Sc:44.956,Ti:47.867,V:50.942,Cr:51.996,Mn:54.938,Fe:55.845,Co:58.933,Ni:58.693,Cu:63.546,Zn:65.38,Ga:69.723,Ge:72.63,As:74.922,Se:78.971,Br:79.904,Kr:83.798,Rb:85.468,Sr:87.62,Y:88.906,Zr:91.224,Nb:92.906,Mo:95.95,Ru:101.07,Rh:102.91,Pd:106.42,Ag:107.87,Cd:112.41,In:114.82,Sn:118.71,Sb:121.76,Te:127.6,I:126.9,Xe:131.29,Cs:132.91,Ba:137.33,La:138.91,Pt:195.08,Au:196.97,Hg:200.59,Tl:204.38,Pb:207.2,Bi:208.98};
+
+/* ---------- State ---------- */
+var S={atoms:{},bonds:{},units:{},next:1}, adj={};
+var SEL=null, SELMOL=null, UNDO=[];
+function rebuildAdj(){
+  adj={};
+  Object.keys(S.atoms).forEach(function(k){adj[k]=[];});
+  Object.keys(S.bonds).forEach(function(k){var b=S.bonds[k];adj[b.a].push(b.id);adj[b.b].push(b.id);});
+}
+function addAtomRaw(el,x,y,u,tag){var id=S.next++;S.atoms[id]={id:id,el:el,x:x,y:y,u:u||0,tag:tag||''};adj[id]=[];return id;}
+function addBondRaw(a,b,o,len,extra){
+  var id=S.next++,bd={id:id,a:a,b:b,o:o,len:len};
+  if(extra)for(var k in extra)bd[k]=extra[k];
+  S.bonds[id]=bd;adj[a].push(id);adj[b].push(id);return id;
+}
+function removeBond(id){
+  var b=S.bonds[id];if(!b)return;
+  [b.a,b.b].forEach(function(x){var L=adj[x];if(L){var i=L.indexOf(id);if(i>-1)L.splice(i,1);}});
+  delete S.bonds[id];
+}
+function removeAtom(id){if(!S.atoms[id])return;adj[id].slice().forEach(removeBond);delete S.atoms[id];delete adj[id];}
+function nb(id){return (adj[id]||[]).map(function(bid){var b=S.bonds[bid];return {b:b,n:b.a===id?b.b:b.a};});}
+function el(id){return S.atoms[id].el;}
+function used(id){var t=0;(adj[id]||[]).forEach(function(bid){t+=S.bonds[bid].o;});return t;}
+function free(id){var u=used(id),v=vals(el(id));for(var i=0;i<v.length;i++)if(v[i]>=u)return v[i]-u;return 0;}
+function canAdd(id,k){return used(id)+k<=maxV(el(id));}
+function bondBetween(a,b){var L=adj[a]||[];for(var i=0;i<L.length;i++){var x=S.bonds[L[i]];if(x.a===b||x.b===b)return x;}return null;}
+function allIds(){return Object.keys(S.atoms).map(Number);}
+function molOf(id){
+  if(!S.atoms[id])return [];
+  var seen={},out=[id],q=[id];seen[id]=1;
+  while(q.length){var c=q.pop();nb(c).forEach(function(e){if(!seen[e.n]){seen[e.n]=1;out.push(e.n);q.push(e.n);}});}
+  return out;
+}
+function allMols(){
+  var seen={},mols=[];
+  allIds().forEach(function(id){if(seen[id])return;var m=molOf(id);m.forEach(function(x){seen[x]=1;});mols.push(m);});
+  return mols;
+}
+function dist(a,b){var A=S.atoms[a],B=S.atoms[b];return Math.hypot(A.x-B.x,A.y-B.y);}
+function uvec(a,b){var A=S.atoms[a],B=S.atoms[b],dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy)||1;return {x:dx/d,y:dy/d};}
+function angOf(a,b){var A=S.atoms[a],B=S.atoms[b];return Math.atan2(B.y-A.y,B.x-A.x);}
+function angDiff(a,b){var x=a-b;while(x>Math.PI)x-=TAU;while(x<-Math.PI)x+=TAU;return x;}
+function centroid(ids){var x=0,y=0;ids.forEach(function(i){x+=S.atoms[i].x;y+=S.atoms[i].y;});return {x:x/ids.length,y:y/ids.length};}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+
+/* ---------- Templates (coordinates in bond lengths, y down) ---------- */
+function T(kind,name,code,atoms,bonds,extra){
+  var t={kind:kind,name:name,code:code,atoms:atoms,bonds:bonds,heavy:atoms.filter(function(a){return a[0]!=='H';}).length};
+  if(extra)for(var k in extra)t[k]=extra[k];
+  return t;
+}
+function aa(name,code,desc,rA,rB){
+  var atoms=[['N',0,0],['C',1,0,'CA'],['C',2,0,'CO'],['O',2,-1],['O',3,0],['H',3.7,0],['H',-0.7,0],['H',0,-0.7],['H',1,-0.7]].concat(rA);
+  var bonds=[[0,1,1],[1,2,1],[2,3,2],[2,4,1],[4,5,1],[0,6,1],[0,7,1],[1,8,1]].concat(rB);
+  return T('aa',name,code,atoms,bonds,{desc:desc,anchor:1,sub:'Amino acid'});
+}
+function glc(an){
+  var a=an==='α',y1=a?0.423:-0.423,yh=a?-0.296:0.296;
+  var atoms=[['C',1,0,'C1'],['C',0.5,0.866,'C2'],['C',-0.5,0.866,'C3'],['C',-1,0,'C4'],['C',-0.5,-0.866,'C5'],['O',0.5,-0.866,'O5'],['C',-0.5,-1.866,'C6'],
+    ['O',1.906,y1],['H',1.634,yh],['H',2.606,y1],
+    ['O',0.587,1.862],['H',1.073,1.267],['H',1.082,2.357],
+    ['O',-1.319,1.44],['H',-0.561,1.563],['H',-2.019,1.44],
+    ['O',-1.906,0.423],['H',-1.634,-0.296],['H',-2.54,0.127],
+    ['H',-1.106,-1.216],
+    ['H',-1.158,-2.105],['H',0.158,-2.105],['O',-0.5,-2.866],['H',0.106,-3.216]];
+  var bonds=[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,0,1],[4,6,1],[0,7,1],[0,8,1],[7,9,1],[1,10,1],[1,11,1],[10,12,1],
+    [2,13,1],[2,14,1],[13,15,1],[3,16,1],[3,17,1],[16,18,1],[4,19,1],[6,20,1],[6,21,1],[6,22,1],[22,23,1]];
+  return T('sugar',an+'-glucose',an+'-glucose',atoms,bonds,{anomer:an,sub:'Monosaccharide'});
+}
+function fattyAcid(){
+  var at=[['C',0,0,'F1'],['O',-1,0],['H',-1.7,0],['O',0,-1]],bd=[[0,1,1],[1,2,1],[0,3,2]],prev=0;
+  for(var i=1;i<=5;i++){
+    var ci=at.length;at.push(['C',i,0]);bd.push([prev,ci,1]);
+    at.push(['H',i,-0.7]);bd.push([ci,ci+1,1]);at.push(['H',i,0.7]);bd.push([ci,ci+2,1]);
+    if(i===5){at.push(['H',5.7,0]);bd.push([ci,ci+3,1]);}
+    prev=ci;
+  }
+  return T('fatty','Fatty acid','FA',at,bd,{sub:'Hexanoic acid'});
+}
+var ETH_H=[['H',-0.35,0.606],['H',-0.35,-0.606]];
+var TPL={
+  gly:aa('Glycine','Gly','Its R group is just a hydrogen atom, so glycine is the smallest amino acid.',[['H',1,0.7]],[[1,9,1]]),
+  ala:aa('Alanine','Ala','Its R group is a methyl group (–CH₃), which is non-polar.',[['C',1,1],['H',0.394,1.35],['H',1.606,1.35],['H',1,1.7]],[[1,9,1],[9,10,1],[9,11,1],[9,12,1]]),
+  ser:aa('Serine','Ser','Its R group is –CH₂OH. The –OH makes serine polar, so it can hydrogen-bond with water.',[['C',1,1],['H',0.394,1.35],['H',1.606,1.35],['O',1,2],['H',1.606,2.35]],[[1,9,1],[9,10,1],[9,11,1],[9,12,1],[12,13,1]]),
+  cys:aa('Cysteine','Cys','Its R group is –CH₂SH. Two cysteines can link through their sulfur atoms to form a disulfide bridge.',[['C',1,1],['H',0.394,1.35],['H',1.606,1.35],['S',1,2],['H',1.606,2.35]],[[1,9,1],[9,10,1],[9,11,1],[9,12,1],[12,13,1]]),
+  val:aa('Valine','Val','Its R group is –CH(CH₃)₂: branched, non-polar and hydrophobic.',[['C',1,1],['C',0.134,1.5],['C',1.866,1.5],['H',1,1.7],['H',0.134,2.2],['H',-0.472,1.85],['H',-0.472,1.15],['H',1.866,2.2],['H',2.472,1.85],['H',2.472,1.15]],[[1,9,1],[9,10,1],[9,11,1],[9,12,1],[10,13,1],[10,14,1],[10,15,1],[11,16,1],[11,17,1],[11,18,1]]),
+  aglc:glc('α'),
+  bglc:glc('β'),
+  glycerol:T('glycerol','Glycerol','Glycerol',[['C',0,0],['C',0,1],['C',0,2],['H',-0.676,0.181],['H',-0.35,-0.606],['O',0.707,-0.707],['H',1.202,-1.202],['H',-0.7,1],['O',1,1],['H',1.7,1],['H',-0.676,1.819],['H',-0.35,2.606],['O',0.707,2.707],['H',1.202,3.202]],
+    [[0,1,1],[1,2,1],[0,3,1],[0,4,1],[0,5,1],[5,6,1],[1,7,1],[1,8,1],[8,9,1],[2,10,1],[2,11,1],[2,12,1],[12,13,1]],{sub:'For fats and oils'}),
+  fa:fattyAcid(),
+  ethene:T('alkene','Ethene','Ethene',[['C',0,0],['C',1,0]].concat(ETH_H,[['H',1.35,0.606],['H',1.35,-0.606]]),[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{sub:'Makes poly(ethene)',poly:'Poly(ethene)',use:'Poly(ethene) is used for plastic bags, bottles and cling film.'}),
+  propene:T('alkene','Propene','Propene',[['C',0,0],['C',1,0]].concat(ETH_H,[['H',1.35,-0.606],['C',1.5,0.866],['H',2.2,0.866],['H',1.85,1.472],['H',1.15,1.472]]),[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1],[5,6,1],[5,7,1],[5,8,1]],{sub:'Makes poly(propene)',poly:'Poly(propene)',use:'Poly(propene) is used for ropes, crates and food tubs.'}),
+  chloro:T('alkene','Chloroethene','Chloroethene',[['C',0,0],['C',1,0]].concat(ETH_H,[['H',1.35,-0.606],['Cl',1.5,0.866]]),[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{sub:'Makes PVC',poly:'Poly(chloroethene), PVC',use:'PVC is used for water pipes, window frames and cable insulation.'}),
+  tfe:T('alkene','Tetrafluoroethene','TFE',[['C',0,0],['C',1,0],['F',-0.5,0.866],['F',-0.5,-0.866],['F',1.5,0.866],['F',1.5,-0.866]],[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{sub:'Makes PTFE',poly:'Poly(tetrafluoroethene), PTFE',use:'PTFE (Teflon) is the slippery coating on non-stick pans.'}),
+  water:T('water','Water','Water',[['O',0,0],['H',-0.606,0.35],['H',0.606,0.35]],[[0,1,1],[0,2,1]],{sub:'For hydrolysis'})
+};
+var ATOM_SHELF=['H','C','N','O','F','Cl','Br','I','S','P','B','Si','Li','Na','K','Mg','Ca','Al'];
+var MOL_SHELF=[['Amino acids',['gly','ala','ser','cys','val']],['Sugars',['aglc','bglc']],['Lipids',['glycerol','fa']],['Alkenes',['ethene','propene','chloro','tfe']],['Other',['water']]];
+
+function tplCentre(t){var x=0,y=0;t.atoms.forEach(function(a){x+=a[1];y+=a[2];});return [x/t.atoms.length,y/t.atoms.length];}
+function tplOffsets(key){var t=TPL[key],c=tplCentre(t);return t.atoms.map(function(a){return [(a[1]-c[0])*BL,(a[2]-c[1])*BL];});}
+function spawnTpl(key,cx,cy){
+  var t=TPL[key],uid=S.next++,ids=[],c=tplCentre(t);
+  S.units[uid]={k:key};
+  t.atoms.forEach(function(a){ids.push(addAtomRaw(a[0],cx+(a[1]-c[0])*BL,cy+(a[2]-c[1])*BL,uid,a[3]||''));});
+  t.bonds.forEach(function(b){addBondRaw(ids[b[0]],ids[b[1]],b[2],dist(ids[b[0]],ids[b[1]]));});
+  return ids;
+}
+function spawn(spec,x,y){
+  if(spec.indexOf('el:')===0)return [addAtomRaw(spec.slice(3),x,y,0,'')];
+  return spawnTpl(spec.slice(4),x,y);
+}
+function unitTpl(id){var u=S.atoms[id]&&S.atoms[id].u,un=u&&S.units[u];return un?TPL[un.k]:null;}
+function unitKind(id){var t=unitTpl(id);return t?t.kind:'';}
+
+/* ---------- Geometry ---------- */
+var LONE={1:[0],2:[Math.PI*5/6,Math.PI/6],3:[Math.PI/6,Math.PI*5/6,Math.PI*1.5],4:[0,Math.PI/2,Math.PI,Math.PI*1.5]};
+function freeSlots(j,n){
+  if(n<=0)return [];
+  var ang=nb(j).map(function(e){return angOf(j,e.n);});
+  if(!ang.length){var r=(LONE[Math.min(n,4)]||LONE[4]).slice(0,n);while(r.length<n)r.push(r.length*TAU/n);return r;}
+  var out=[];
+  for(var k=0;k<n;k++){
+    var s=ang.map(function(a){return ((a%TAU)+TAU)%TAU;}).sort(function(a,b){return a-b;}),bg=-1,bm=0;
+    for(var i=0;i<s.length;i++){var a0=s[i],a1=i+1<s.length?s[i+1]:s[0]+TAU,g=a1-a0;if(g>bg+1e-9){bg=g;bm=a0+g/2;}}
+    ang.push(bm);out.push(bm);
+  }
+  return out;
+}
+function slotToward(j,t){
+  var want=angOf(j,t);
+  if(!adj[j].length)return {x:Math.cos(want),y:Math.sin(want)};
+  var sl=freeSlots(j,Math.max(free(j),1)),best=sl[0],bd=9;
+  sl.forEach(function(a){var d=Math.abs(angDiff(a,want));if(d<bd){bd=d;best=a;}});
+  return {x:Math.cos(best),y:Math.sin(best)};
+}
+function branch(s,x){
+  var seen={},q=[s],out=[s];seen[x]=1;seen[s]=1;
+  while(q.length){var c=q.shift();nb(c).forEach(function(e){if(!seen[e.n]){seen[e.n]=1;q.push(e.n);out.push(e.n);}});}
+  return out;
+}
+function rotAround(ids,cx,cy,th){
+  var c=Math.cos(th),s=Math.sin(th);
+  ids.forEach(function(i){var p=S.atoms[i],dx=p.x-cx,dy=p.y-cy;p.x=cx+dx*c-dy*s;p.y=cy+dx*s+dy*c;});
+}
+/* Lay the two substituents of an opened alkene carbon at right angles to the chain */
+function straighten(x,p){
+  var X=S.atoms[x],u=angOf(x,p),subs=nb(x).filter(function(e){return e.n!==p;}).map(function(e){return e.n;});
+  if(subs.length!==2)return;
+  var t1=u+Math.PI/2,t2=u-Math.PI/2,a0=angOf(x,subs[0]),a1=angOf(x,subs[1]);
+  var cA=Math.abs(angDiff(a0,t1))+Math.abs(angDiff(a1,t2)),cB=Math.abs(angDiff(a0,t2))+Math.abs(angDiff(a1,t1));
+  var tt=cA<=cB?[t1,t2]:[t2,t1];
+  subs.forEach(function(s,i){var br=branch(s,x);if(br.indexOf(p)>-1)return;rotAround(br,X.x,X.y,angDiff(tt[i],i?a1:a0));});
+}
+function openAlkene(al){var b=S.bonds[al.b];if(b)b.o=1;straighten(al.c1,al.c2);straighten(al.c2,al.c1);}
+
+/* Move molecule A so atom aj bonds to bj: rotate (maybe mirror) so the directions line up, then translate */
+function place(A,aj,dA,bj,dB,L){
+  var J=S.atoms[aj],B=S.atoms[bj],tx=B.x+dB.x*L,ty=B.y+dB.y*L;
+  var rel=A.map(function(id){var p=S.atoms[id];return [id,p.x-J.x,p.y-J.y];});
+  var best={cost:1e9,m:0,th:0};
+  if(dA&&A.length>1){
+    var inA={};A.forEach(function(i){inA[i]=1;});
+    var others=allIds().filter(function(i){return !inA[i]&&i!==bj;});
+    [0,1].forEach(function(m){
+      var ay=m?-dA.y:dA.y,th=angDiff(Math.atan2(-dB.y,-dB.x),Math.atan2(ay,dA.x));
+      var c=Math.cos(th),s=Math.sin(th),ov=0,lim=Math.pow(0.8*BL,2);
+      rel.forEach(function(r){
+        if(r[0]===aj)return;
+        var x=r[1],y=m?-r[2]:r[2],px=tx+x*c-y*s,py=ty+x*s+y*c;
+        for(var i=0;i<others.length;i++){var o=S.atoms[others[i]],dx=o.x-px,dy=o.y-py;if(dx*dx+dy*dy<lim){ov++;break;}}
+      });
+      var cost=Math.abs(th)+(m?0.3:0)+0.6*ov;
+      if(cost<best.cost)best={cost:cost,m:m,th:th};
+    });
+  }
+  var c=Math.cos(best.th),s=Math.sin(best.th);
+  rel.forEach(function(r){var x=r[1],y=best.m?-r[2]:r[2],p=S.atoms[r[0]];p.x=tx+x*c-y*s;p.y=ty+x*s+y*c;});
+}
+
+/* Gentle relaxation: keeps bond lengths, pushes apart atoms that overlap */
+function relax(ids,iters){
+  if(ids.length<3)return;
+  var idx={},n=ids.length,X=[],Y=[],near=[],bl=[];
+  ids.forEach(function(id,i){idx[id]=i;X.push(S.atoms[id].x);Y.push(S.atoms[id].y);near.push({});});
+  ids.forEach(function(id,i){
+    nb(id).forEach(function(e){
+      var j=idx[e.n];if(j==null)return;
+      near[i][j]=1;if(e.b.a===id)bl.push([i,j,e.b.len]);
+      nb(e.n).forEach(function(e2){var k=idx[e2.n];if(k!=null)near[i][k]=1;});
+    });
+  });
+  var minD=0.8*BL;
+  for(var it=0;it<iters;it++){
+    var fx=new Float64Array(n),fy=new Float64Array(n),worst=0,i,j;
+    for(i=0;i<n;i++)for(j=i+1;j<n;j++){
+      if(near[i][j])continue;
+      var dx=X[j]-X[i],dy=Y[j]-Y[i],d2=dx*dx+dy*dy;
+      if(d2<minD*minD){var d=Math.sqrt(d2)||0.01,f=(minD-d)*0.5/d;if(!d2){dx=0.5;dy=0.3;}fx[i]-=dx*f;fy[i]-=dy*f;fx[j]+=dx*f;fy[j]+=dy*f;worst=Math.max(worst,minD-d);}
+    }
+    bl.forEach(function(b){
+      var dx=X[b[1]]-X[b[0]],dy=Y[b[1]]-Y[b[0]],d=Math.hypot(dx,dy)||0.01,f=(d-b[2])*0.5/d;
+      worst=Math.max(worst,Math.abs(d-b[2]));
+      fx[b[0]]+=dx*f;fy[b[0]]+=dy*f;fx[b[1]]-=dx*f;fy[b[1]]-=dy*f;
+    });
+    if(worst<0.5)break;
+    for(i=0;i<n;i++){X[i]+=fx[i]*0.6;Y[i]+=fy[i]*0.6;}
+  }
+  ids.forEach(function(id,i){S.atoms[id].x=X[i];S.atoms[id].y=Y[i];});
+}
+function minDist(A,B){
+  var m=1e9;
+  A.forEach(function(a){var P=S.atoms[a];B.forEach(function(b){var Q=S.atoms[b],d=Math.hypot(P.x-Q.x,P.y-Q.y);if(d<m)m=d;});});
+  return m;
+}
+function pushAway(A,B,gap){
+  var ca=centroid(A),cb=centroid(B),vx=ca.x-cb.x,vy=ca.y-cb.y,d=Math.hypot(vx,vy);
+  if(d<1){vx=1;vy=0;d=1;}vx/=d;vy/=d;
+  for(var k=0;k<40&&minDist(A,B)<gap;k++)A.forEach(function(i){S.atoms[i].x+=vx*0.35*BL;S.atoms[i].y+=vy*0.35*BL;});
+}
+function separate(M){
+  var inM={};M.forEach(function(i){inM[i]=1;});
+  allMols().forEach(function(O){if(inM[O[0]])return;if(minDist(M,O)<1.2*BL)pushAway(O,M,1.5*BL);});
+}
+
+/* ---------- Functional groups ---------- */
+function hasDoubleO(x){return nb(x).some(function(e){return e.b.o===2&&el(e.n)==='O';});}
+function groups(ids){
+  var g={acid:[],amine:[],alc:[],thiol:[],alk:[],rad:[]};
+  ids.forEach(function(id){
+    var e=el(id),N=nb(id);
+    if((e==='C'||e==='P')&&hasDoubleO(id)){
+      N.forEach(function(x){
+        if(x.b.o!==1||el(x.n)!=='O')return;
+        var on=nb(x.n);if(on.length!==2)return;
+        var h=on.filter(function(y){return y.n!==id&&el(y.n)==='H';})[0];
+        if(h)g.acid.push({x:id,o:x.n,h:h.n,p:e==='P'});
+      });
+    }
+    if(e==='N'&&!N.some(function(x){return el(x.n)==='C'&&hasDoubleO(x.n);}))
+      N.forEach(function(x){if(el(x.n)==='H')g.amine.push({n:id,h:x.n});});
+    if(e==='O'&&N.length===2&&N.every(function(x){return x.b.o===1;})){
+      var h2=N.filter(function(x){return el(x.n)==='H';})[0],c2=N.filter(function(x){return el(x.n)==='C';})[0];
+      if(h2&&c2&&!hasDoubleO(c2.n))g.alc.push({o:id,h:h2.n,c:c2.n,sugar:unitKind(c2.n)==='sugar'});
+    }
+    if(e==='S'&&N.length===2){
+      var h3=N.filter(function(x){return el(x.n)==='H';})[0],c3=N.filter(function(x){return el(x.n)!=='H';})[0];
+      if(h3&&c3)g.thiol.push({s:id,h:h3.n});
+    }
+    if(e==='C'){
+      N.forEach(function(x){if(x.b.o===2&&el(x.n)==='C'&&id<x.n)g.alk.push({b:x.b.id,c1:id,c2:x.n});});
+      if(free(id)>0)g.rad.push(id);
+    }
+  });
+  return g;
+}
+var CONDL={peptide:1,amide:1,ester:1,phosphoester:1,glycosidic:1};
+
+function cands(A,B){
+  var gA=groups(A),gB=groups(B),out=[];
+  function cond(link,aj,aRem,aTo,bj,bRem,bTo,oh,w){
+    out.push({t:'cond',link:link,aj:aj,aRem:aRem,aDir:uvec(aj,aTo),bj:bj,bRem:bRem,bDir:uvec(bj,bTo),oh:oh,cost:dist(aj,bj)*w});
+  }
+  function pep(x,y){return unitKind(x)==='aa'&&unitKind(y)==='aa'?'peptide':'amide';}
+  gA.acid.forEach(function(ac){gB.amine.forEach(function(am){cond(pep(ac.x,am.n),ac.x,[ac.o,ac.h],ac.o,am.n,[am.h],am.h,ac.x,1);});});
+  gB.acid.forEach(function(ac){gA.amine.forEach(function(am){cond(pep(ac.x,am.n),am.n,[am.h],am.h,ac.x,[ac.o,ac.h],ac.o,ac.x,1);});});
+  gA.acid.forEach(function(ac){gB.alc.forEach(function(al){cond(ac.p?'phosphoester':'ester',ac.x,[ac.o,ac.h],ac.o,al.o,[al.h],al.h,ac.x,unitKind(al.c)==='aa'?2.5:1.4);});});
+  gB.acid.forEach(function(ac){gA.alc.forEach(function(al){cond(ac.p?'phosphoester':'ester',al.o,[al.h],al.h,ac.x,[ac.o,ac.h],ac.o,ac.x,unitKind(al.c)==='aa'?2.5:1.4);});});
+  gA.alc.forEach(function(a){
+    if(!a.sugar)return;
+    gB.alc.forEach(function(b){
+      if(!b.sugar)return;
+      var a1=S.atoms[a.c].tag==='C1',b1=S.atoms[b.c].tag==='C1',w=(a1||b1)?1:2;
+      if(a1||!b1)cond('glycosidic',a.c,[a.o,a.h],a.o,b.o,[b.h],b.h,a.c,w);
+      else cond('glycosidic',a.o,[a.h],a.h,b.c,[b.o,b.h],b.o,b.c,w);
+      out[out.length-1].cost=dist(a.o,b.o)*w;
+    });
+  });
+  gA.thiol.forEach(function(a){gB.thiol.forEach(function(b){cond('disulfide',a.s,[a.h],a.h,b.s,[b.h],b.h,0,1.1);});});
+  function nearC(al,x){return dist(al.c1,x)<=dist(al.c2,x)?al.c1:al.c2;}
+  gA.rad.forEach(function(r){gB.alk.forEach(function(al){var c=nearC(al,r);out.push({t:'add',aj:r,bj:c,openB:al,cost:dist(r,c)*1.1});});});
+  gB.rad.forEach(function(r){gA.alk.forEach(function(al){var c=nearC(al,r);out.push({t:'add',aj:c,bj:r,openA:al,cost:dist(r,c)*1.1});});});
+  gA.alk.forEach(function(a){gB.alk.forEach(function(b){
+    var best=null;
+    [a.c1,a.c2].forEach(function(x){[b.c1,b.c2].forEach(function(y){var d=dist(x,y);if(!best||d<best[2])best=[x,y,d];});});
+    out.push({t:'add',aj:best[0],bj:best[1],openA:a,openB:b,cost:best[2]*1.1});
+  });});
+  A.forEach(function(a){
+    var fa=free(a);if(!maxV(el(a)))return;
+    B.forEach(function(b){
+      if(!maxV(el(b)))return;
+      var d=dist(a,b);if(d>1.9*BL)return;
+      var fb=free(b);
+      var ok=(fa>0&&fb>0)||(fa>0&&el(a)==='O'&&EXPAND[el(b)]&&canAdd(b,1))||(fb>0&&el(b)==='O'&&EXPAND[el(a)]&&canAdd(a,1));
+      if(ok)out.push({t:'direct',aj:a,bj:b,cost:d*0.7});
+    });
+  });
+  return out;
+}
+function glyInfo(cc,o){
+  var c2=nb(o).map(function(e){return e.n;}).filter(function(n){return n!==cc&&el(n)==='C';})[0];
+  var n1=+(S.atoms[cc].tag||'').slice(1)||0,n2=c2?(+(S.atoms[c2].tag||'').slice(1)||0):0;
+  var one=n1===1?cc:(n2===1?c2:null),t=one?unitTpl(one):null;
+  return {an:t?t.anomer:'',p:(n1===1?[n1,n2]:[n2,n1]).join(',')};
+}
+function applyCand(c,A){
+  var msg='';
+  if(c.t==='cond'){
+    var gi=c.link==='glycosidic'?glyInfo(c.oh,c.oh===c.aj?c.bj:c.aj):null;
+    c.aRem.concat(c.bRem).forEach(removeAtom);
+    var Ar=A.filter(function(i){return S.atoms[i];});
+    place(Ar,c.aj,c.aDir,c.bj,c.bDir,BL);
+    var ex={link:c.link};if(c.oh)ex.oh=c.oh;if(gi)ex.gp=gi;
+    var bid=addBondRaw(c.aj,c.bj,1,BL,ex);
+    msg=linkMsg(S.bonds[bid]);
+    if(c.link!=='disulfide')effect(c.aj,c.bj,'out');
+  }else{
+    if(c.openA)openAlkene(c.openA);
+    if(c.openB)openAlkene(c.openB);
+    var isH=el(c.aj)==='H'||el(c.bj)==='H',L=(isH?HL:1)*BL;
+    var dB=slotToward(c.bj,c.aj),dA=A.length>1?slotToward(c.aj,c.bj):null;
+    place(A,c.aj,dA,c.bj,dB,L);
+    addBondRaw(c.aj,c.bj,1,L,c.t==='add'?{link:'addition'}:null);
+    if(c.t==='add')msg='The C=C double bond opened and the carbons joined: addition polymerisation. Nothing is released.';
+  }
+  var M=molOf(c.aj);relax(M,80);separate(M);
+  return msg;
+}
+function isWater(A){
+  if(A.length!==3)return false;
+  var o=A.filter(function(i){return el(i)==='O';});
+  return o.length===1&&nb(o[0]).length===2&&nb(o[0]).every(function(e){return el(e.n)==='H';});
+}
+function nearestLink(B,pt){
+  var best=null,bd=3.5*BL;
+  B.forEach(function(i){adj[i].forEach(function(bid){
+    var b=S.bonds[bid];if(!b.link||b.link==='addition')return;
+    var P=S.atoms[b.a],Q=S.atoms[b.b],d=Math.hypot((P.x+Q.x)/2-pt.x,(P.y+Q.y)/2-pt.y);
+    if(d<bd){bd=d;best=bid;}
+  });});
+  return best;
+}
+function addH(j,dir){var J=S.atoms[j],h=addAtomRaw('H',J.x+dir.x*HL*BL,J.y+dir.y*HL*BL,J.u,'');addBondRaw(j,h,1,HL*BL);return h;}
+function hydrolyse(bid,water){
+  var b=S.bonds[bid];if(!b||!b.link||b.link==='addition')return null;
+  var link=b.link,x=b.oh||b.a,y=x===b.a?b.b:b.a,u=uvec(x,y);
+  removeBond(bid);
+  if(water)water.forEach(removeAtom);
+  var bridge=molOf(x).indexOf(y)<0;
+  if(bridge)molOf(y).forEach(function(i){S.atoms[i].x+=u.x*2.2*BL;S.atoms[i].y+=u.y*2.2*BL;});
+  var X=S.atoms[x];
+  if(link==='disulfide'){addH(x,u);addH(y,{x:-u.x,y:-u.y});}
+  else{
+    var o=addAtomRaw('O',X.x+u.x*BL,X.y+u.y*BL,X.u,'');addBondRaw(x,o,1,BL);
+    var h=addAtomRaw('H',X.x+u.x*(1+HL)*BL,X.y+u.y*(1+HL)*BL,X.u,'');addBondRaw(o,h,1,HL*BL);
+    addH(y,{x:-u.x,y:-u.y});
+    effect(x,y,'in');
+  }
+  relax(molOf(x),60);if(bridge)relax(molOf(y),60);
+  return link;
+}
+function linkName(b){
+  if(b.link==='glycosidic'){var g=b.gp||{};return (g.an?g.an+'-':'')+(g.p||'')+'-glycosidic bond';}
+  return {peptide:'peptide bond',amide:'amide bond',ester:'ester bond',phosphoester:'phosphoester bond',disulfide:'disulfide bridge',addition:'C–C bond from addition'}[b.link]||'bond';
+}
+function linkMsg(b){
+  if(b.link==='disulfide')return 'Disulfide bridge formed between the two sulfur atoms. Two hydrogen atoms were removed.';
+  if(b.link==='glycosidic'&&b.gp&&b.gp.p.indexOf('1')!==0)return 'The sugars joined through carbons '+b.gp.p.replace(',',' and ')+' and released water. Natural glycosidic bonds always involve carbon 1.';
+  var n=linkName(b);
+  return n.charAt(0).toUpperCase()+n.slice(1)+' formed, and one water molecule was released: a condensation reaction.';
+}
+
+/* ---------- Dropping a molecule ---------- */
+function findPair(A,inA){
+  var best=null,bd=SNAP;
+  A.forEach(function(a){var P=S.atoms[a];for(var k in S.atoms){var Q=S.atoms[k];if(inA[Q.id])continue;var d=Math.hypot(P.x-Q.x,P.y-Q.y);if(d<bd){bd=d;best=[a,Q.id];}}});
+  return best;
+}
+function findTarget(A,inA){var p=findPair(A,inA);return p?p[1]:null;}
+function noJoinMsg(A,B){
+  var all=A.concat(B);
+  if(all.some(function(i){var e=EL[el(i)];return e&&e.c==='ng';}))return 'Noble gases have full outer shells, so they don’t bond.';
+  if(all.some(function(i){return !maxV(el(i));}))return 'That element is too unstable to bond here.';
+  if(A.some(function(i){return free(i)>0;})&&B.some(function(i){return free(i)>0;}))return 'Both have spare bonds (the open circles), but not close together. Bring those atoms right next to each other.';
+  if(A.some(function(i){return free(i)>0;})||B.some(function(i){return free(i)>0;}))return 'Only one of them has spare bonds (the open circles). Both atoms need a spare bond to join, unless they have groups that react together.';
+  return 'These can’t join: every atom already has all its bonds, and there’s no pair of groups that react (like –COOH with –NH₂ or –OH).';
+}
+function onDrop(A,grab){
+  var inA={};A.forEach(function(i){inA[i]=1;});
+  var pr=findPair(A,inA);if(!pr)return false;
+  if(grab!=null&&S.atoms[grab]){var pg=findPair([grab],inA);if(pg)pr=pg;}
+  var g=pr[0],t=pr[1];
+  var B=molOf(t);
+  if(isWater(A)){
+    var lb=nearestLink(B,centroid(A));
+    if(lb!=null){var k=S.bonds[lb],nm=linkName(k),keep=k.oh||k.a;hydrolyse(lb,A);select({t:'atom',id:keep});toast('Hydrolysis: the water molecule split the '+nm+'.');return true;}
+    pushAway(A,B,1.6*BL);toast('Nothing to hydrolyse there. Drop water onto a peptide, glycosidic or ester bond.');return false;
+  }
+  var cs=cands(A,B);
+  if(!cs.length){pushAway(A,B,1.6*BL);toast(noJoinMsg(A,B));return false;}
+  cs.forEach(function(c){
+    var da=dist(c.aj,g),db=dist(c.bj,t);
+    (c.aRem||[]).forEach(function(r){da=Math.min(da,dist(r,g));});
+    (c.bRem||[]).forEach(function(r){db=Math.min(db,dist(r,t));});
+    c.cost+=0.5*(da+db);
+  });
+  cs.sort(function(x,y){return x.cost-y.cost;});
+  var c=cs[0],msg=applyCand(c,A);
+  select({t:'atom',id:c.aj});
+  if(msg)toast(msg);
+  return true;
+}
+
+/* ---------- Analysis ---------- */
+var HFIRST={O:1,S:1,Se:1,Te:1,F:1,Cl:1,Br:1,I:1};
+function enOf(s){return EL[s]&&EL[s].en!=null?EL[s].en:9;}
+function formulaOf(cnt){
+  var ks=Object.keys(cnt),order=[];
+  if(cnt.C){order.push('C');if(cnt.H)order.push('H');ks.filter(function(k){return k!=='C'&&k!=='H';}).sort().forEach(function(k){order.push(k);});}
+  else{
+    var met=ks.filter(function(k){return isMetal(EL[k]);}).sort(function(a,b){return enOf(a)-enOf(b);});
+    var non=ks.filter(function(k){return !isMetal(EL[k])&&k!=='H';}).sort(function(a,b){return enOf(a)-enOf(b);});
+    var hFirst=!met.length&&ks.some(function(k){return HFIRST[k];});
+    order=met.slice();if(cnt.H&&hFirst)order.push('H');order=order.concat(non);if(cnt.H&&!hFirst)order.push('H');
+  }
+  return order.map(function(k){return k+(cnt[k]>1?cnt[k]:'');}).join('');
+}
+function sigOf(els,bonds){
+  var env=els.map(function(){return [];});
+  bonds.forEach(function(b){env[b[0]].push(els[b[1]]+b[2]);env[b[1]].push(els[b[0]]+b[2]);});
+  return els.map(function(e,i){return e+'('+env[i].sort().join(',')+')';}).sort().join(' ');
+}
+function xm(name,els,bonds,p){var e={name:name,type:'polar',mol:{atoms:els.map(function(s){return [s,0,0,0];}),bonds:bonds}};for(var k in p)e[k]=p[k];return e;}
+var H4=['H','H','H','H'];
+var EXTRA=[
+  xm('Methanol',['C','O'].concat(H4),[[0,1,1],[1,2,1],[0,3,1],[0,4,1],[0,5,1]],{state:'Liquid',mp:-98,bp:65,sol:'Mixes completely with water',cond:'Does not conduct',chem:['Toxic: even small amounts can cause blindness.','Burns with a clean flame and is used as a fuel.']}),
+  xm('Ethanol',['C','C','O'].concat(H4,['H','H']),[[0,1,1],[1,2,1],[2,3,1],[0,4,1],[0,5,1],[0,6,1],[1,7,1],[1,8,1]],{state:'Liquid',mp:-114,bp:78,sol:'Mixes completely with water',cond:'Does not conduct',chem:['The alcohol in drinks, made when yeast ferments sugars.','Its –OH group can hydrogen-bond, so it boils far higher than propane, which has a similar mass.','Burns to carbon dioxide and water, so it’s used as a biofuel.']}),
+  xm('Ethanoic acid',['C','C','O','O'].concat(H4),[[0,1,1],[1,2,2],[1,3,1],[3,4,1],[0,5,1],[0,6,1],[0,7,1]],{state:'Liquid',mp:17,bp:118,sol:'Mixes completely with water',cond:'Only weakly, as a solution',chem:['The acid in vinegar.','A weak acid: only some of its molecules release H⁺ ions in water.','Reacts with alcohols in a condensation reaction to make esters.']}),
+  xm('Propane',['C','C','C'].concat(H4,H4),[[0,1,1],[1,2,1],[0,3,1],[0,4,1],[0,5,1],[1,6,1],[1,7,1],[2,8,1],[2,9,1],[2,10,1]],{type:'nonpolar',state:'Gas',mp:-188,bp:-42,sol:'Insoluble in water',cond:'Does not conduct',chem:['An alkane sold as bottled gas for heaters and barbecues.']}),
+  xm('Butane',['C','C','C','C'].concat(H4,H4,['H','H']),[[0,1,1],[1,2,1],[2,3,1],[0,4,1],[0,5,1],[0,6,1],[1,7,1],[1,8,1],[2,9,1],[2,10,1],[3,11,1],[3,12,1],[3,13,1]],{type:'nonpolar',state:'Gas',mp:-138,bp:-1,sol:'Insoluble in water',cond:'Does not conduct',chem:['Used in lighters and camping stoves.']})
+];
+var SIG={},IONF={};
+function buildSig(){
+  Object.keys(DB).forEach(function(k){DB[k].forEach(function(e){
+    if(e.none)return;
+    if(e.type==='ionic'&&!IONF[e.f])IONF[e.f]=e;
+    if(e.mol&&e.type!=='network'&&e.type!=='ionic'){var s=sigOf(e.mol.atoms.map(function(a){return a[0];}),e.mol.bonds);if(!SIG[s])SIG[s]=e;}
+  });});
+  EXTRA.forEach(function(e){SIG[sigOf(e.mol.atoms.map(function(a){return a[0];}),e.mol.bonds)]=e;});
+}
+function bondKind(b){
+  var A=EL[el(b.a)],B=EL[el(b.b)];
+  if(isMetal(A)&&isMetal(B))return 'metallic';
+  if(A.en==null||B.en==null)return 'nonpolar';
+  var d=dEN(A,B);
+  if(d>=1.7&&(isMetal(A)||isMetal(B)))return 'ionic';
+  return d<0.4?'nonpolar':'polar';
+}
+function pairLabel(a,b,o){
+  var x=el(a),y=el(b);
+  if(x==='H'&&y!=='H'){var t=x;x=y;y=t;}
+  else if(y==='C'&&x!=='C'){var t2=x;x=y;y=t2;}
+  else if(x!=='C'&&y!=='H'&&enOf(x)>enOf(y)){var t3=x;x=y;y=t3;}
+  return x+(['','–','=','≡'][o]||'–')+y;
+}
+function seqOf(M){
+  var next={},prev={},us={};
+  M.forEach(function(i){if(S.atoms[i].u)us[S.atoms[i].u]=1;
+    adj[i].forEach(function(bid){var b=S.bonds[bid];if(b.link==='peptide'&&b.a===i){var x=b.oh,y=x===b.a?b.b:b.a;next[S.atoms[x].u]=S.atoms[y].u;prev[S.atoms[y].u]=1;}});});
+  var ids=Object.keys(us),start=ids.filter(function(u){return !prev[u];})[0]||ids[0],out=[],seen={},c=start;
+  while(c&&!seen[c]){seen[c]=1;out.push(TPL[S.units[c].k].code);c=next[c]!=null?String(next[c]):null;}
+  if(out.length!==ids.length)ids.forEach(function(u){if(!seen[u])out.push(TPL[S.units[u].k].code);});
+  return out;
+}
+function analyse(M){
+  var cnt={},heavy=0,bonds=[],seen={},units={},unitHeavy=0;
+  M.forEach(function(i){
+    var a=S.atoms[i];cnt[a.el]=(cnt[a.el]||0)+1;
+    if(a.el!=='H'){heavy++;if(a.u&&S.units[a.u]){units[a.u]=S.units[a.u];unitHeavy++;}}
+    adj[i].forEach(function(bid){if(!seen[bid]){seen[bid]=1;bonds.push(S.bonds[bid]);}});
+  });
+  var R={M:M,cnt:cnt,formula:formulaOf(cnt),n:M.length,bonds:bonds,links:bonds.filter(function(b){return b.link;})};
+  var mr=0;for(var s in cnt){if(MASS[s]==null){mr=null;break;}mr+=MASS[s]*cnt[s];}R.mr=mr;
+  R.spare=0;M.forEach(function(i){R.spare+=free(i);});
+  R.water=R.links.filter(function(b){return CONDL[b.link];}).length;
+  var uids=Object.keys(units),expHeavy=-R.water;
+  uids.forEach(function(u){expHeavy+=TPL[units[u].k].heavy;});
+  R.intact=uids.length>0&&unitHeavy===heavy&&heavy===expHeavy;
+  R.kinds={};uids.forEach(function(u){var k=TPL[units[u].k].kind;R.kinds[k]=(R.kinds[k]||0)+1;});
+  R.uids=uids;R.units=units;
+  if(R.intact)nameUnits(R);
+  if(!R.name){
+    var els=M.map(function(i){return el(i);}),ix={};M.forEach(function(i,j){ix[i]=j;});
+    var e=SIG[sigOf(els,bonds.map(function(b){return [ix[b.a],ix[b.b],b.o];}))];
+    if(!e&&bonds.length&&bonds.every(function(b){return bondKind(b)==='ionic';}))e=IONF[R.formula];
+    if(e){R.name=e.name.replace(/ \(.*\)/,'');R.entry=e;R.pill=TYPES[e.type]?TYPES[e.type].label:'';R.pillT=e.type;}
+  }else{
+    var els2=M.map(function(i){return el(i);}),ix2={};M.forEach(function(i,j){ix2[i]=j;});
+    var e2=SIG[sigOf(els2,bonds.map(function(b){return [ix2[b.a],ix2[b.b],b.o];}))];
+    if(e2)R.entry=e2;
+  }
+  return R;
+}
+function nameUnits(R){
+  var K=R.kinds,ks=Object.keys(K),L=R.links,one=R.uids.length===1?TPL[R.units[R.uids[0]].k]:null,ex=[];
+  R.explain=ex;
+  if(ks.length===1&&ks[0]==='aa'){
+    var n=K.aa,seq=seqOf(R.M),ok=L.every(function(b){return b.link==='peptide'||b.link==='disulfide';});
+    if(n===1){R.name=one.name;R.pill='Amino acid';
+      ex.push('Every amino acid has the same backbone: an amine group (–NH₂), a carboxyl group (–COOH) and a hydrogen, all bonded to one central carbon. Only the R group changes.');
+      ex.push(one.desc);ex.push('Drop another amino acid onto this one to make a dipeptide.');return;}
+    if(!ok){R.name='Modified amino acid chain';R.pill='Mixed';return;}
+    var nPep=L.filter(function(b){return b.link==='peptide';}).length;
+    if(!nPep&&n===2){R.name='Cystine';R.pill='Two linked amino acids';
+      ex.push('Two cysteines joined only through their R groups by a disulfide bridge (–S–S–), not by a peptide bond. In a protein, bridges like this link distant parts of the chain and help hold its 3D (tertiary) shape.');return;}
+    if(nPep<n-1){R.name='Linked peptide chains';R.pill='Peptide';R.sub=n+' amino acids';
+      ex.push('These amino acids are in separate chains held together by disulfide bridges, like the chains in insulin.');return;}
+    R.name=n===2?'Dipeptide':n===3?'Tripeptide':'Polypeptide';R.pill=R.name;
+    R.sub=seq.join('–')+(n>3?' ('+n+' amino acids)':'');
+    ex.push('Amino acids join by condensation. The –OH from one carboxyl group and an –H from the next amine group leave as water, and a peptide bond (C–N) forms between them.');
+    ex.push('The chain keeps a free amine end and a free carboxyl end, so you can add amino acids at either end.');
+    if(L.some(function(b){return b.link==='disulfide';}))ex.push('The disulfide bridge (–S–S–) links two cysteine R groups. Bridges like this help hold a protein in its 3D (tertiary) shape.');
+    ex.push('Hydrolysis reverses it: drop a water molecule onto a peptide bond, or tap the bond and press Hydrolyse.');
+    return;
+  }
+  if(ks.length===1&&ks[0]==='sugar'){
+    var ns=K.sugar;
+    if(ns===1){R.name=one.name;R.pill='Monosaccharide';
+      ex.push('Glucose is a hexose sugar, C₆H₁₂O₆. α-glucose and β-glucose differ only at carbon 1 (the right-hand carbon here): its –OH points down in α and up in β.');
+      ex.push('To make a 1,4-glycosidic bond, drop another glucose so carbon 1 of one sits next to carbon 4 (the left-hand carbon) of the other.');return;}
+    var gp=L.filter(function(b){return b.link==='glycosidic';}).map(function(b){return b.gp||{};});
+    var allA14=gp.every(function(g){return g.an==='α'&&g.p==='1,4';}),allB14=gp.every(function(g){return g.an==='β'&&g.p==='1,4';});
+    var alpha16=gp.some(function(g){return g.an==='α'&&g.p==='1,6';})&&gp.every(function(g){return g.an==='α'&&(g.p==='1,4'||g.p==='1,6');});
+    if(ns===2){
+      R.pill='Disaccharide';
+      R.name=allA14?'Maltose':allB14?'Cellobiose':'Disaccharide';
+      if(allA14)ex.push('Maltose is two glucose molecules joined by an α-1,4-glycosidic bond. It forms when amylase digests starch.');
+      else if(allB14)ex.push('Cellobiose is two glucose molecules joined by a β-1,4-glycosidic bond: the repeating unit of cellulose.');
+    }else{
+      R.pill='Polysaccharide';
+      if(allA14){R.name='Amylose chain';ex.push('A chain of α-glucose joined by α-1,4-glycosidic bonds, like amylose in starch. Real amylose coils into a helix, which makes it compact for storing energy.');}
+      else if(alpha16){R.name='Branched polysaccharide';ex.push('The α-1,6-glycosidic bonds make branches, as in amylopectin and glycogen. More branch ends means enzymes can release glucose faster.');}
+      else if(allB14){R.name='Cellulose chain';ex.push('A chain of β-glucose joined by β-1,4-glycosidic bonds, with every other glucose flipped over, as drawn here. That keeps cellulose chains straight, so many can lie side by side and hydrogen-bond into strong microfibrils.');}
+      else R.name='Polysaccharide';
+      R.sub=ns+' glucose units';
+    }
+    ex.push('Each glycosidic bond formed by condensation, releasing one water molecule. Hydrolysis with water breaks it again.');
+    return;
+  }
+  if(K.glycerol===1&&ks.every(function(k){return k==='glycerol'||k==='fatty';})&&L.every(function(b){return b.link==='ester';})){
+    var f=K.fatty||0;
+    if(!f){R.name='Glycerol';R.pill='Lipid building block';ex.push('Glycerol has three –OH groups, so up to three fatty acids can join it by condensation.');ex.push('Drop a fatty acid so its –COOH end touches one of glycerol’s –OH groups.');return;}
+    R.name=['','Monoglyceride','Diglyceride','Triglyceride'][f];R.pill='Lipid';
+    ex.push('Each fatty acid joined glycerol by condensation: an ester bond formed and one water molecule was released'+(f>1?', so this took '+f+' water molecules out.':'.'));
+    if(f===3)ex.push('Triglycerides are fats and oils. They store a lot of energy, are insoluble in water, and release water when they’re respired.');
+    ex.push('Real fatty acids usually have 12 to 20 carbons. This one has 6 so it fits on screen.');
+    return;
+  }
+  if(ks.length===1&&ks[0]==='fatty'&&K.fatty===1){
+    R.name='Fatty acid (hexanoic acid)';R.pill='Lipid building block';
+    ex.push('A fatty acid has a carboxyl group (–COOH) at one end and a hydrocarbon chain. With only single C–C bonds, it’s saturated.');
+    ex.push('Real fatty acids usually have 12 to 20 carbons. This one has 6 so it fits on screen.');return;
+  }
+  if(ks.length===1&&ks[0]==='alkene'){
+    if(K.alkene===1&&!L.length){R.name=one.name;R.pill='Alkene';
+      ex.push('The C=C double bond is what makes an alkene reactive, and what lets it polymerise.');
+      ex.push('Drop another one onto it to start an addition polymer.');return;}
+    var keys={};R.uids.forEach(function(u){keys[R.units[u].k]=1;});var kk=Object.keys(keys);
+    R.pill='Addition polymer';R.sub=K.alkene+' repeat units';
+    R.name=kk.length===1?TPL[kk[0]].poly+' chain':'Copolymer chain';
+    ex.push('Addition polymerisation: each C=C double bond opens and the carbons link into a long saturated chain. Nothing else forms, unlike condensation.');
+    if(kk.length===1)ex.push(TPL[kk[0]].use);
+    if(R.spare)ex.push('The chain ends are still open (the open circles). Add H caps them.');
+    return;
+  }
+  if(ks.length===1&&ks[0]==='water'){R.name='Water';R.pill='For hydrolysis';ex.push('Condensation reactions release water; hydrolysis uses it up. Drop this onto a peptide, glycosidic or ester bond to hydrolyse it.');return;}
+  var parts=R.uids.map(function(u){return TPL[R.units[u].k].name.toLowerCase();}),tally={};
+  parts.forEach(function(p){tally[p]=(tally[p]||0)+1;});
+  R.name='Mixed molecule';R.pill='Mixed';
+  R.sub='Made from '+Object.keys(tally).map(function(p){return tally[p]+' '+p;}).join(', ');
+  if(R.water)ex.push('It was joined by condensation reactions that released '+R.water+' water molecule'+(R.water>1?'s':'')+'.');
+}
+
+/* ---------- Canvas ---------- */
+var cv,ctx,W=0,H=0,DPR=1,view={x:0,y:0,z:1},COL={},EFX=[],rafPending=false,HOVER=null,DRAG=null,PTRS={},PINCH=null;
+function readColors(){
+  var cs=getComputedStyle(document.documentElement);
+  var d={ink:'#14222E',ink2:'#47596A',line:'#C4CFC8',bench:'#EEF2EE',panel:'#F8FAF7',link:'#B86B00',sel:'#2F6BFF'};
+  for(var k in d){var v=cs.getPropertyValue('--'+k);COL[k]=(v&&v.trim())||d[k];}
+}
+function rgba(hex,a){
+  var h=hex.replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');
+  if(!/^[0-9a-f]{6}$/i.test(h))return hex;
+  return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';
+}
+function w2s(x,y){return {x:(x-view.x)*view.z+W/2,y:(y-view.y)*view.z+H/2};}
+function s2w(x,y){return {x:(x-W/2)/view.z+view.x,y:(y-H/2)/view.z+view.y};}
+function atomR(s){return s==='H'?11:16;}
+function redraw(){if(rafPending)return;rafPending=true;requestAnimationFrame(function(){rafPending=false;draw();});}
+function resize(){
+  var r=$('stage').getBoundingClientRect();
+  W=r.width;H=r.height;DPR=Math.min(window.devicePixelRatio||1,2);
+  if(cv){cv.width=Math.max(1,Math.round(W*DPR));cv.height=Math.max(1,Math.round(H*DPR));}
+  draw();
+}
+function ring(p,r,col,w,dash){ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);}
+function draw(){
+  if(!ctx||!W||!H)return;
+  var z=view.z,now=performance.now();
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
+  if(BL*z>=18){
+    ctx.fillStyle=rgba(COL.ink2,0.28);
+    var w0=s2w(0,0),gx=Math.floor(w0.x/BL)*BL,gy=Math.floor(w0.y/BL)*BL;
+    for(var gxx=gx;;gxx+=BL){var sx=(gxx-view.x)*z+W/2;if(sx>W)break;for(var gyy=gy;;gyy+=BL){var sy=(gyy-view.y)*z+H/2;if(sy>H)break;ctx.fillRect(sx-1,sy-1,2,2);}}
+  }
+  var ids=Object.keys(S.atoms);
+  if(!ids.length){ctx.fillStyle=COL.ink2;ctx.font='500 16px '+BODYF;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Add an atom or a molecule to start.',W/2,H/2);}
+  if(SELMOL){ctx.fillStyle=rgba(COL.sel,0.13);SELMOL.forEach(function(i){var a=S.atoms[i];if(!a)return;var p=w2s(a.x,a.y);ctx.beginPath();ctx.arc(p.x,p.y,(atomR(a.el)+9)*z,0,TAU);ctx.fill();});}
+  ctx.lineCap='round';
+  for(var bk in S.bonds){
+    var b=S.bonds[bk],P=S.atoms[b.a],Q=S.atoms[b.b];if(!P||!Q)continue;
+    var p=w2s(P.x,P.y),q=w2s(Q.x,Q.y),dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,kind=bondKind(b);
+    if(SEL&&SEL.t==='bond'&&SEL.id===b.id){ctx.strokeStyle=rgba(COL.sel,0.35);ctx.lineWidth=14*z;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();}
+    ctx.strokeStyle=b.link?COL.link:COL.ink;ctx.lineWidth=Math.max(1.2,(b.link?3.6:2.4)*z);
+    ctx.setLineDash(kind==='ionic'?[5*z,5*z]:[]);
+    (b.o===1?[0]:b.o===2?[-3.8,3.8]:[-6.5,0,6.5]).forEach(function(o){ctx.beginPath();ctx.moveTo(p.x+nx*o*z,p.y+ny*o*z);ctx.lineTo(q.x+nx*o*z,q.y+ny*o*z);ctx.stroke();});
+    ctx.setLineDash([]);
+  }
+  var labels={};
+  ids.forEach(function(k){
+    var a=S.atoms[k],p=w2s(a.x,a.y),r=atomR(a.el)*z,c=cpk(a.el);
+    if(p.x<-40||p.y<-40||p.x>W+40||p.y>H+40)return;
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fillStyle=c[0];ctx.fill();
+    ctx.lineWidth=Math.max(1,1.4*z);ctx.strokeStyle=COL.ink;ctx.stroke();
+    if(z>0.4){ctx.fillStyle=c[1];ctx.font='700 '+((a.el==='H'?11.5:a.el.length>1?12.5:14.5)*z)+'px '+DISPF;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(a.el,p.x,p.y+0.5*z);}
+    var f=maxV(a.el)?free(a.id):0;
+    if(f>0){freeSlots(a.id,f).forEach(function(an){var d=r+7*z;ctx.beginPath();ctx.arc(p.x+Math.cos(an)*d,p.y+Math.sin(an)*d,3.6*z,0,TAU);ctx.fillStyle=COL.bench;ctx.fill();ctx.lineWidth=Math.max(1,1.6*z);ctx.strokeStyle=COL.ink2;ctx.stroke();});}
+    if(SEL&&SEL.t==='atom'&&SEL.id===a.id)ring(p,r+4*z,COL.sel,3);
+    if(HOVER===a.id)ring(p,r+5*z,COL.sel,2,[4,3]);
+    if(a.u&&S.units[a.u]){
+      var t=TPL[S.units[a.u].k];
+      if(t.kind==='aa'&&a.tag==='CA')labels[a.u]={x:a.x,y:a.y-1.35*BL,t:t.code};
+      else if(t.kind==='sugar'&&/^(C[1-5]|O5)$/.test(a.tag)){var L2=labels[a.u]||(labels[a.u]={x:0,y:0,n:0,t:t.anomer,big:1});L2.x+=a.x;L2.y+=a.y;L2.n++;}
+    }
+  });
+  if(z>0.45){
+    ctx.fillStyle=COL.ink2;ctx.font='600 '+(12*z)+'px '+BODYF;ctx.textAlign='center';ctx.textBaseline='middle';
+    Object.keys(labels).forEach(function(u){var l=labels[u],x=l.n?l.x/l.n:l.x,y=l.n?l.y/l.n:l.y;if(l.n&&l.n<6)return;var p=w2s(x,y);ctx.font=(l.big?'700 '+(19*z)+'px '+DISPF:'600 '+(12*z)+'px '+BODYF);ctx.fillText(l.t,p.x,p.y);});
+  }
+  if(DRAG&&DRAG.target!=null&&S.atoms[DRAG.target]){var T0=S.atoms[DRAG.target];ring(w2s(T0.x,T0.y),(atomR(T0.el)+8)*z,COL.sel,3,[6,4]);}
+  EFX=EFX.filter(function(e){return now-e.t<1500;});
+  EFX.forEach(function(e){
+    var k=(now-e.t)/1500,p=w2s(e.x,e.y),al=e.kind==='out'?1-k:Math.min(1,k*3)*(1-k*k),oy=e.kind==='out'?-k*70:-(1-k)*70;
+    ctx.globalAlpha=Math.max(0,al);
+    var cx=p.x,cy=p.y+oy-18;
+    [[-11,7,'H'],[11,7,'H'],[0,0,'O']].forEach(function(s){var cc=cpk(s[2]);ctx.beginPath();ctx.arc(cx+s[0],cy+s[1],s[2]==='O'?9:6,0,TAU);ctx.fillStyle=cc[0];ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=COL.ink;ctx.stroke();});
+    ctx.fillStyle=COL.ink;ctx.font='700 13px '+BODYF;ctx.textAlign='left';ctx.fillText(e.kind==='out'?'H₂O released':'H₂O added',cx+20,cy+2);
+    ctx.globalAlpha=1;
+  });
+  if(EFX.length)redraw();
+}
+function effect(a,b,kind){
+  var P=S.atoms[a],Q=S.atoms[b];if(!P||!Q)return;
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  EFX.push({x:(P.x+Q.x)/2,y:(P.y+Q.y)/2,t:performance.now(),kind:kind});redraw();
+}
+function hitAtom(wx,wy){
+  var best=null,bd=1e9,z=view.z;
+  for(var k in S.atoms){var a=S.atoms[k],d=Math.hypot(a.x-wx,a.y-wy);if(d<atomR(a.el)+8/z&&d<bd){bd=d;best=a.id;}}
+  return best;
+}
+function hitBond(wx,wy){
+  var best=null,bd=9/view.z+2;
+  for(var k in S.bonds){
+    var b=S.bonds[k],P=S.atoms[b.a],Q=S.atoms[b.b],dx=Q.x-P.x,dy=Q.y-P.y,L2=dx*dx+dy*dy||1;
+    var t=clamp(((wx-P.x)*dx+(wy-P.y)*dy)/L2,0,1),d=Math.hypot(P.x+dx*t-wx,P.y+dy*t-wy);
+    if(d<bd){bd=d;best=b.id;}
+  }
+  return best;
+}
+function fit(){
+  var ids=Object.keys(S.atoms);
+  if(!ids.length){view={x:0,y:0,z:1};redraw();return;}
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  ids.forEach(function(k){var a=S.atoms[k];x0=Math.min(x0,a.x);y0=Math.min(y0,a.y);x1=Math.max(x1,a.x);y1=Math.max(y1,a.y);});
+  var pad=2*BL,top=60;
+  view.z=clamp(Math.min((W-40)/(x1-x0+pad),(H-top-40)/(y1-y0+pad)),0.3,1.4);
+  view.x=(x0+x1)/2;view.y=(y0+y1)/2-(top/2)/view.z;redraw();
+}
+function viewCentre(){return s2w(W/2,H/2+20);}
+function findSpot(offs,cx,cy){
+  function clear(x,y){for(var k in S.atoms){var a=S.atoms[k];for(var i=0;i<offs.length;i++){if(Math.hypot(a.x-x-offs[i][0],a.y-y-offs[i][1])<1.4*BL)return false;}}return true;}
+  for(var r=0;r<16;r++){
+    var n=r?r*6:1;
+    for(var k=0;k<n;k++){var an=k/n*TAU+r*0.4,x=cx+Math.cos(an)*r*BL*1.6,y=cy+Math.sin(an)*r*BL*1.6;if(clear(x,y))return [x,y];}
+  }
+  return [cx,cy];
+}
+
+/* ---------- Canvas pointer handling (touch, pen, mouse and hand) ---------- */
+function stagePt(cx,cy){var r=cv.getBoundingClientRect();return {x:cx-r.left,y:cy-r.top};}
+function cDown(cx,cy,id){
+  var p=stagePt(cx,cy);PTRS[id]={x:p.x,y:p.y};
+  var ks=Object.keys(PTRS);
+  if(ks.length===2){
+    if(DRAG&&DRAG.mode==='mol'){DRAG.mol.forEach(function(i){if(S.atoms[i]){S.atoms[i].x+=DRAG.ox-DRAG.lx;S.atoms[i].y+=DRAG.oy-DRAG.ly;}});}
+    DRAG=null;var a=PTRS[ks[0]],b=PTRS[ks[1]];
+    PINCH={d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,z:view.z,vx:view.x,vy:view.y};redraw();return;
+  }
+  if(ks.length>2)return;
+  var w=s2w(p.x,p.y),at=hitAtom(w.x,w.y),bd=at==null?hitBond(w.x,w.y):null;
+  DRAG={id:id,sx:p.x,sy:p.y,px:p.x,py:p.y,lx:w.x,ly:w.y,ox:w.x,oy:w.y,atom:at,bond:bd,moved:false,mode:null};
+}
+function cMove(cx,cy,id){
+  if(!PTRS[id])return;
+  var p=stagePt(cx,cy);PTRS[id]={x:p.x,y:p.y};
+  if(PINCH){
+    var ks=Object.keys(PTRS);if(ks.length<2)return;
+    var a=PTRS[ks[0]],b=PTRS[ks[1]],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,z=clamp(PINCH.z*d/PINCH.d,0.3,2.5);
+    var wx=(PINCH.mx-W/2)/PINCH.z+PINCH.vx,wy=(PINCH.my-H/2)/PINCH.z+PINCH.vy;
+    view.z=z;view.x=wx-(mx-W/2)/z;view.y=wy-(my-H/2)/z;redraw();return;
+  }
+  if(!DRAG||DRAG.id!==id)return;
+  if(!DRAG.moved&&Math.hypot(p.x-DRAG.sx,p.y-DRAG.sy)<8)return;
+  if(!DRAG.moved){
+    DRAG.moved=true;
+    if(DRAG.atom!=null){pushUndo();DRAG.mode='mol';DRAG.mol=molOf(DRAG.atom);DRAG.inA={};DRAG.mol.forEach(function(i){DRAG.inA[i]=1;});}
+    else DRAG.mode='pan';
+  }
+  if(DRAG.mode==='mol'){
+    var w=s2w(p.x,p.y),dx=w.x-DRAG.lx,dy=w.y-DRAG.ly;
+    DRAG.mol.forEach(function(i){S.atoms[i].x+=dx;S.atoms[i].y+=dy;});
+    DRAG.lx=w.x;DRAG.ly=w.y;DRAG.target=findTarget(DRAG.mol,DRAG.inA);
+  }else{view.x-=(p.x-DRAG.px)/view.z;view.y-=(p.y-DRAG.py)/view.z;}
+  DRAG.px=p.x;DRAG.py=p.y;redraw();
+}
+function cUp(cx,cy,id){
+  delete PTRS[id];
+  if(PINCH){if(Object.keys(PTRS).length<2)PINCH=null;DRAG=null;return;}
+  if(!DRAG||DRAG.id!==id)return;
+  var d=DRAG;DRAG=null;
+  if(!d.moved){
+    if(d.atom!=null)select({t:'atom',id:d.atom});
+    else if(d.bond!=null)select({t:'bond',id:d.bond});
+    else select(null);
+  }else if(d.mode==='mol'){onDrop(d.mol,d.atom);commit();}
+  redraw();
+}
+
+/* ---------- Commands ---------- */
+function snap(){return JSON.stringify(S);}
+function pushUndo(){UNDO.push(snap());if(UNDO.length>60)UNDO.shift();}
+function undo(){if(!UNDO.length)return;try{S=JSON.parse(UNDO.pop());}catch(e){return;}rebuildAdj();SEL=null;commit();}
+var saveT=0;
+function save(){clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem('bondbench-build-v1',JSON.stringify({S:S,view:view}));}catch(e){}},400);}
+function load(){
+  try{
+    var raw=localStorage.getItem('bondbench-build-v1');if(!raw)return;
+    var d=JSON.parse(raw);
+    if(d&&d.S&&d.S.atoms&&d.S.bonds){S=d.S;S.units=S.units||{};rebuildAdj();if(d.view&&isFinite(d.view.z))view=d.view;}
+  }catch(e){}
+}
+function selMolIds(){
+  if(!SEL)return null;
+  if(SEL.t==='atom')return S.atoms[SEL.id]?molOf(SEL.id):null;
+  var b=S.bonds[SEL.id];return b?molOf(b.a):null;
+}
+function select(s){SEL=s;SELMOL=selMolIds();if(!SELMOL)SEL=null;renderInfo();updTools();redraw();}
+function commit(){
+  if(SEL&&((SEL.t==='atom'&&!S.atoms[SEL.id])||(SEL.t==='bond'&&!S.bonds[SEL.id])))SEL=null;
+  SELMOL=selMolIds();renderInfo();updTools();save();redraw();
+}
+function updTools(){
+  $('tUndo').disabled=!UNDO.length;$('tDel').disabled=!SEL;$('tClear').disabled=!Object.keys(S.atoms).length;
+  var ids=SELMOL||allIds();$('tFill').disabled=!ids.some(function(i){return free(i)>0;});
+}
+var toastT=0;
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},4200);}
+function fillH(ids){
+  var n=0;
+  ids.slice().forEach(function(id){
+    if(!S.atoms[id])return;var f=free(id);if(f<=0)return;
+    var P=S.atoms[id];
+    freeSlots(id,f).forEach(function(a){var h=addAtomRaw('H',P.x+Math.cos(a)*HL*BL,P.y+Math.sin(a)*HL*BL,P.u,'');addBondRaw(id,h,1,HL*BL);n++;});
+  });
+  return n;
+}
+function tapAdd(spec){
+  pushUndo();
+  if(spec.indexOf('el:')===0){
+    var s=spec.slice(3),sel=SEL&&SEL.t==='atom'&&S.atoms[SEL.id]?SEL.id:null;
+    if(sel!=null&&maxV(s)>0&&free(sel)>0){
+      var a=freeSlots(sel,free(sel))[0],L=((s==='H'||el(sel)==='H')?HL:1)*BL,P=S.atoms[sel];
+      var id=addAtomRaw(s,P.x+Math.cos(a)*L,P.y+Math.sin(a)*L,0,'');addBondRaw(sel,id,1,L);relax(molOf(sel),40);
+      select({t:'atom',id:(free(id)>0&&s!=='H')?id:(free(sel)>0?sel:id)});
+    }else{
+      var c=viewCentre(),p=findSpot([[0,0]],c.x,c.y),id2=addAtomRaw(s,p[0],p[1],0,'');
+      select({t:'atom',id:id2});
+      if(!maxV(s))toast(EL[s].c==='ng'?'Noble gases have full outer shells, so this atom won’t bond.':'This element is too unstable to bond here.');
+    }
+  }else{
+    var key=spec.slice(4),c2=viewCentre(),p2=findSpot(tplOffsets(key),c2.x,c2.y),ids=spawnTpl(key,p2[0],p2[1]);
+    select({t:'atom',id:ids[TPL[key].anchor||0]});
+    var q=w2s(p2[0],p2[1]);if(q.x<0||q.y<0||q.x>W||q.y>H)fit();
+  }
+  commit();
+}
+function setOrder(bid,o){
+  var b=S.bonds[bid];if(!b||b.o===o)return;
+  var d=o-b.o;if(d>0&&(!canAdd(b.a,d)||!canAdd(b.b,d)))return;
+  pushUndo();b.o=o;delete b.link;delete b.oh;delete b.gp;
+  b.len=(el(b.a)==='H'||el(b.b)==='H'?HL:1)*BL;commit();
+}
+function deleteSel(){
+  if(!SEL)return;pushUndo();
+  if(SEL.t==='bond')removeBond(SEL.id);
+  else{var id=SEL.id;nb(id).forEach(function(e){if(el(e.n)==='H'&&nb(e.n).length===1)removeAtom(e.n);});removeAtom(id);}
+  SEL=null;commit();
+}
+function tidy(){
+  pushUndo();
+  var ms=allMols();ms.forEach(function(m){relax(m,150);});
+  for(var r=0;r<3;r++)for(var i=0;i<ms.length;i++)for(var j=i+1;j<ms.length;j++)if(minDist(ms[i],ms[j])<1.3*BL)pushAway(ms[j],ms[i],1.6*BL);
+  commit();fit();
+}
+
+/* ---------- Info panel ---------- */
+function pillHTML(type,label){var T0=TYPES[type];return '<span class="pill" style="--t:var('+(T0?T0.v:'--ink2')+')">'+(label||T0.label)+'</span>';}
+function defaultInfo(){
+  var ms=allMols(),n=Object.keys(S.atoms).length;
+  return '<h2 class="ih">Build molecules</h2>'+
+  '<p><b>Add atoms.</b> Tap an element to put an atom on the bench. If an atom is selected, the new one bonds to it, so tapping C, C, C makes a chain.</p>'+
+  '<p><b>Bond them.</b> Drag an atom next to another atom that has spare bonds (the small open circles). A whole molecule moves together.</p>'+
+  '<p><b>Join molecules.</b> Drop one molecule onto another. Amino acids, sugars, glycerol and fatty acids join by condensation and release water. Alkenes join by addition.</p>'+
+  '<p><b>Change or break a bond.</b> Tap it.</p>'+
+  '<p><b>Zoom and pan.</b> Pinch with two fingers, or drag the empty bench.</p>'+
+  (n?'<p class="muted">On the bench: '+ms.length+' molecule'+(ms.length>1?'s':'')+', '+n+' atom'+(n>1?'s':'')+'.</p>':'');
+}
+function bondInfo(b){
+  var A=EL[el(b.a)],B=EL[el(b.b)],k=bondKind(b),d=(A.en!=null&&B.en!=null)?dEN(A,B):null,h='';
+  h+='<div class="head"><div><div class="formula long">'+pairLabel(b.a,b.b,b.o)+'</div><div class="cname">'+(b.link?linkName(b).replace(/^./,function(c){return c.toUpperCase();}):['','Single','Double','Triple'][b.o]+' bond')+'</div></div>'+pillHTML(k)+'</div>';
+  var txt='';
+  if(k==='ionic')txt='ΔEN '+d+' and one atom is a metal, so this is really an ionic bond: the metal atom gives electrons to the non-metal.';
+  else if(k==='metallic')txt='Both atoms are metals, so they share delocalised electrons (metallic bonding).';
+  else if(d==null)txt='No electronegativity data for this pair.';
+  else if(k==='nonpolar')txt='ΔEN '+d+': the shared electrons are held about equally, so the bond is non-polar.';
+  else{var hi=A.en>B.en?A:B;txt='ΔEN '+d+': '+hi.n.toLowerCase()+' pulls the shared electrons closer, so its end is slightly negative (δ−).';}
+  h+='<p>'+txt+'</p>';
+  var lt={peptide:'A peptide bond. It formed in a condensation reaction that released one water molecule. Hydrolysis (adding water back) breaks it.',
+    amide:'An amide bond, formed by condensation. Hydrolysis breaks it.',
+    ester:'An ester bond, formed by condensation between a carboxyl group and an –OH group. Hydrolysis breaks it.',
+    phosphoester:'A phosphoester bond, formed by condensation. Hydrolysis breaks it.',
+    glycosidic:'A glycosidic bond: the sugars are linked through an oxygen (C–O–C). It formed by condensation, and hydrolysis breaks it.',
+    disulfide:'A disulfide bridge between two sulfur atoms. In proteins these help hold the 3D (tertiary) shape.',
+    addition:'This C–C bond formed when a C=C double bond opened during addition polymerisation.'}[b.link];
+  if(lt)h+='<p>'+lt+'</p>';
+  h+='<div class="chips" role="group" aria-label="Bond order">';
+  [1,2,3].forEach(function(o){var ok=o<=b.o||(canAdd(b.a,o-b.o)&&canAdd(b.b,o-b.o));h+='<button class="chip" type="button" data-cmd="order" data-o="'+o+'" aria-pressed="'+(b.o===o)+'"'+(ok?'':' disabled')+'>'+['','Single','Double','Triple'][o]+'</button>';});
+  h+='</div><div class="acts"><button class="btn ghost" type="button" data-cmd="break">Break bond</button>';
+  if(b.link&&b.link!=='addition')h+='<button class="btn" type="button" data-cmd="hydro">'+(b.link==='disulfide'?'Break bridge (add 2 H)':'Hydrolyse (add water)')+'</button>';
+  return '<div class="expl">'+h+'</div></div>';
+}
+function molInfo(M){
+  var R=analyse(M),h='';
+  var pill=R.pillT?pillHTML(R.pillT):(R.pill?'<span class="pill" style="--t:var(--ink2)">'+R.pill+'</span>':'');
+  h+='<div class="head"><div><div class="formula'+(R.formula.length>7?' long':'')+'">'+fmtF(R.formula)+'</div><div class="cname">'+(R.name||'Unnamed molecule')+'</div></div>'+pill+'</div>';
+  var st=[];if(R.sub)st.push(R.sub);if(R.mr!=null)st.push('M<sub>r</sub> '+R.mr.toFixed(1));st.push(R.n+' atom'+(R.n>1?'s':''));
+  h+='<p class="muted">'+st.join('. ')+'.</p>';
+  if(R.spare)h+='<div class="spare"><span>'+R.spare+' spare bond'+(R.spare>1?'s':'')+' left (open circles).</span><button class="btn ghost" type="button" data-cmd="fillh">Add hydrogens</button></div>';
+  if(R.explain&&R.explain.length){h+='<div class="expl">';R.explain.forEach(function(p){h+='<p>'+p+'</p>';});h+='</div>';}
+  else if(!R.name&&R.n>1)h+='<p class="muted">This one isn’t in the library, so it’s shown by its formula.</p>';
+  if(R.links.length){
+    var c={};R.links.forEach(function(b){var n=linkName(b);c[n]=(c[n]||0)+1;});
+    h+='<section><h3>Links made</h3><ul class="blist">';
+    Object.keys(c).forEach(function(n){h+='<li><span>'+n.charAt(0).toUpperCase()+n.slice(1)+'</span><span class="k">×'+c[n]+'</span></li>';});
+    if(R.water)h+='<li><span>Water released making it</span><span class="k">'+R.water+'</span></li>';
+    h+='</ul></section>';
+  }
+  if(R.bonds.length){
+    var g={},order=[];
+    R.bonds.forEach(function(b){var key=pairLabel(b.a,b.b,b.o);if(!g[key]){g[key]={n:0,b:b};order.push(key);}g[key].n++;});
+    order.sort(function(x,y){return g[y].n-g[x].n;});
+    h+='<section><h3>Bonds</h3><ul class="blist">';
+    order.forEach(function(key){var b=g[key].b,k=bondKind(b),A=EL[el(b.a)],B=EL[el(b.b)],d=(A.en!=null&&B.en!=null)?' (ΔEN '+dEN(A,B)+')':'';
+      h+='<li><span>'+key+' ×'+g[key].n+'</span><span class="k">'+TYPES[k].label.toLowerCase()+d+'</span></li>';});
+    h+='</ul></section>';
+  }
+  if(R.entry){
+    var e=R.entry;
+    h+='<section><h3>Properties</h3>'+props(e)+'</section>';
+    if(e.chem&&e.chem.length){h+='<section><h3>Chemical characteristics</h3><ul class="blist">';e.chem.forEach(function(x){h+='<li><span>'+x+'</span></li>';});h+='</ul></section>';}
+    if(e.type==='ionic')h+='<p class="note">In a real solid the ions form a giant lattice rather than one small cluster like this.</p>';
+  }
+  h+='<div class="acts"><button class="btn ghost" type="button" data-cmd="delmol">Delete molecule</button></div>';
+  return h;
+}
+function renderInfo(){
+  var box=$('binfo');if(!box)return;
+  if(!SEL||!SELMOL){box.innerHTML=defaultInfo();return;}
+  var h='';
+  if(SEL.t==='bond')h+=bondInfo(S.bonds[SEL.id])+'<hr style="border:0;border-top:1px solid var(--line);margin:0;width:100%">';
+  else{
+    var a=S.atoms[SEL.id],E=EL[a.el],f=free(a.id),u=used(a.id);
+    h+='<p class="selline"><b>'+E.n+' atom</b>, '+u+' bond'+(u===1?'':'s')+' used. '+(f>0?f+' spare: tap an element to attach it here.':(maxV(a.el)?'All its bonds are used.':'It doesn’t form bonds.'))+'</p>';
+  }
+  box.innerHTML=h+molInfo(SELMOL);
+}
+
+/* ---------- Shelf, palette drag and overlay ---------- */
+function buildShelf(){
+  var h='';
+  ATOM_SHELF.forEach(function(s){var c=cpk(s);h+='<button class="atom-btn" type="button" data-add="el:'+s+'" style="--f:'+c[0]+';--k:'+c[1]+'" aria-label="Add '+EL[s].n+'"><span class="s">'+s+'</span><span class="n">'+EL[s].n+'</span></button>';});
+  h+='<button class="all-btn" type="button" data-cmd="allel">All elements…</button>';
+  $('palAtoms').innerHTML=h;
+  h='';
+  MOL_SHELF.forEach(function(g){h+='<p class="grp">'+g[0]+'</p>';g[1].forEach(function(k){var t=TPL[k];h+='<button class="mol-btn" type="button" data-add="tpl:'+k+'"><b>'+t.name+'</b><span>'+t.sub+'</span></button>';});});
+  $('palMols').innerHTML=h;
+  h='';
+  LIST.forEach(function(e){var p=pos(e.z);h+='<button class="el" type="button" data-add="el:'+e.s+'" aria-label="'+e.n+'" title="'+e.n+'" style="grid-row:'+p[0]+';grid-column:'+p[1]+';--cat:var(--c-'+e.c+')"><span class="n">'+e.z+'</span><span class="s">'+e.s+'</span></button>';});
+  $('pt2').innerHTML=h;
+}
+var PD=null,GH=null,suppressClick=0;
+function ghostStart(spec){
+  var g=$('ghost');GH={spec:spec};
+  if(spec.indexOf('el:')===0){var s=spec.slice(3),c=cpk(s);g.className='g-atom';g.style.background=c[0];g.style.color=c[1];g.textContent=s;}
+  else{g.className='g-mol';g.style.background='';g.style.color='';g.textContent=TPL[spec.slice(4)].name;}
+  g.style.display='flex';
+}
+function ghostMove(x,y){
+  $('ghost').style.transform='translate('+x+'px,'+y+'px) translate(-50%,-50%)';
+  if(GH&&cv){var r=cv.getBoundingClientRect(),inside=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom,h=null;if(inside){var w=s2w(x-r.left,y-r.top);h=hitAtom(w.x,w.y);}if(h!==HOVER){HOVER=h;redraw();}}
+}
+function ghostDrop(x,y){
+  $('ghost').style.display='none';HOVER=null;
+  var spec=GH&&GH.spec;GH=null;if(!spec)return;
+  var r=cv.getBoundingClientRect();
+  if($('buildView').hidden||x<r.left||x>r.right||y<r.top||y>r.bottom){redraw();return;}
+  var w=s2w(x-r.left,y-r.top);
+  pushUndo();
+  var ids=spawn(spec,w.x,w.y);
+  if(!onDrop(ids,spec.indexOf('el:')===0?ids[0]:null))select({t:'atom',id:ids[spec.indexOf('tpl:')===0?(TPL[spec.slice(4)].anchor||0):0]});
+  commit();
+}
+function openOverlay(){$('elOverlay').classList.add('open');}
+function closeOverlay(){$('elOverlay').classList.remove('open');}
+
+/* ---------- Mode switching ---------- */
+function setMode(m){
+  var b=m==='build';
+  $('buildView').hidden=!b;$('pairView').hidden=b;
+  $('tab-build').setAttribute('aria-selected',b);$('tab-pair').setAttribute('aria-selected',!b);
+  document.body.classList.toggle('mode-build',b);
+  try{localStorage.setItem('bondbench-mode',m);}catch(e){}
+  if(b)requestAnimationFrame(resize);
+}
+
+/* ---------- Hand control (one or two hands, camera as the full-screen backdrop) ---------- */
+var MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';
+var MP_MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+function mkSlot(i){return {i:i,on:false,x:0,y:0,fx:{v:null,d:0,t:0},fy:{v:null,d:0,t:0},pinch:false,seen:0,down:null,cur:null};}
+var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
+var HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+var HAND_COL=['#4D8DFF','#FF9A3C'];
+function hMsg(m,err){var s=$('hstat');$('hmsg').textContent=m||'';s.hidden=!m;$('hdock').classList.toggle('err',!!err);}
+function setHandBtn(on){var b=$('handBtn');b.setAttribute('aria-pressed',on);b.textContent=on?'Stop hand control':'Hand control';}
+/* One Euro filter: steady when your hand is still, quick when it moves */
+function oeA(c,dt){var tau=1/(6.2832*c);return 1/(1+tau/dt);}
+function oe(f,v,t){
+  if(f.v===null){f.v=v;f.d=0;f.t=t;return v;}
+  var dt=Math.max(0.004,(t-f.t)/1000);f.t=t;
+  f.d+=((v-f.v)/dt-f.d)*oeA(1,dt);
+  f.v+=(v-f.v)*oeA(1.6+0.03*Math.abs(f.d),dt);
+  return f.v;
+}
+function dist3(a,b){return Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);}
+/* Camera picture -> screen pixels (mirrored, same crop as the full-screen video) */
+function vmap(p){
+  var W=innerWidth,H=innerHeight,s=Math.max(W/HT.vw,H/HT.vh),dw=HT.vw*s,dh=HT.vh*s;
+  return {x:(1-p.x)*dw-(dw-W)/2,y:p.y*dh-(dh-H)/2};
+}
+function resizeFull(){
+  var c=$('hfull'),d=Math.min(window.devicePixelRatio||1,2);HT.d=d;
+  c.width=Math.max(1,Math.round(innerWidth*d));c.height=Math.max(1,Math.round(innerHeight*d));
+}
+async function handStart(){
+  if(HT.busy||HT.on)return;HT.busy=true;
+  setHandBtn(true);$('hdock').classList.add('on');
+  HT.slots[0].cur=$('hcur0');HT.slots[1].cur=$('hcur1');
+  try{
+    if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw {k:'nocam'};
+    hMsg('Starting the camera…');
+    var st;
+    try{st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60}},audio:false});}
+    catch(e){throw {k:(e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))?'blocked':'nocam'};}
+    HT.stream=st;var v=$('hvid');v.srcObject=st;v.muted=true;
+    document.body.classList.add('hand-on');
+    try{await v.play();}catch(e){}
+    if(!HT.lm){
+      hMsg('Loading hand tracking…');
+      var vision;
+      try{vision=await import(MP+'/vision_bundle.mjs');}catch(e){throw {k:'lib'};}
+      var fs;try{fs=await vision.FilesetResolver.forVisionTasks(MP+'/wasm');}catch(e){throw {k:'lib'};}
+      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
+      try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'));}
+      catch(e){try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'));}catch(e2){throw {k:'lib'};}}
+    }
+    if(!HT.stream){HT.busy=false;return;}
+    if(!HT.sc)HT.sc=document.createElement('canvas');
+    if(!HT.rs){HT.rs=true;window.addEventListener('resize',function(){if(HT.on)resizeFull();});}
+    resizeFull();HT.on=true;HT.seenAny=false;HT.useVideo=false;
+    hMsg('Use one or two hands. Pinch your thumb and finger to grab or tap, then open them to let go. Pinch with both hands on the bench to zoom.');
+    hSchedule();
+  }catch(err){
+    var k=err&&err.k;
+    handStop(true);
+    hMsg(k==='blocked'?'The camera is blocked on this page. If you allowed it and it’s still blocked, this page is probably open inside Claude’s viewer, which doesn’t give pages the camera. Hand control works in your own hosted copy.':
+      k==='nocam'?'No camera is available here. Hand control needs a camera and a secure (https) page.':
+      'Hand tracking couldn’t load. Inside Claude’s viewer it can’t download what it needs, so use your own hosted copy. Otherwise, check your internet connection and try again.',true);
+    $('hdock').classList.add('on');
+  }
+  HT.busy=false;
+}
+function hSchedule(){
+  var v=$('hvid');
+  if(v.requestVideoFrameCallback)HT.vf=v.requestVideoFrameCallback(hFrame);
+  else HT.raf=requestAnimationFrame(hFrame);
+}
+function handStop(keep){
+  HT.on=false;
+  var v=$('hvid');
+  if(v){try{if(v.cancelVideoFrameCallback&&HT.vf)v.cancelVideoFrameCallback(HT.vf);}catch(e){}v.srcObject=null;}
+  cancelAnimationFrame(HT.raf);HT.vf=0;
+  HT.slots.forEach(function(s){if(s.cur)hRelease(s);s.fx.v=null;s.fy.v=null;});
+  if(HT.stream){HT.stream.getTracks().forEach(function(t){t.stop();});HT.stream=null;}
+  HT.hov.forEach(function(e){e.classList.remove('hand-hover');});HT.hov=[];
+  if(HOVER!=null){HOVER=null;redraw();}
+  var c=$('hfull'),g=c&&c.getContext&&c.getContext('2d');if(g)g.clearRect(0,0,c.width,c.height);
+  document.body.classList.remove('hand-on');
+  setHandBtn(false);
+  if(!keep){$('hdock').classList.remove('on');hMsg('');}
+}
+function hFrame(){
+  if(!HT.on)return;
+  var v=$('hvid');
+  if(v.readyState>=2&&v.videoWidth){
+    HT.vw=v.videoWidth;HT.vh=v.videoHeight;
+    var src=v;
+    if(!HT.useVideo){
+      try{
+        var sw=384,sh=Math.max(1,Math.round(sw*HT.vh/HT.vw));
+        if(HT.sc.width!==sw||HT.sc.height!==sh){HT.sc.width=sw;HT.sc.height=sh;HT.scx=HT.sc.getContext('2d');}
+        HT.scx.drawImage(v,0,0,sw,sh);src=HT.sc;
+      }catch(e){HT.useVideo=true;src=v;}
+    }
+    var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;HT.lastTs=ts;
+    var res=null;
+    try{res=HT.lm.detectForVideo(src,ts);}catch(e){if(!HT.useVideo)HT.useVideo=true;}
+    hProcess(res,ts);
+  }
+  hSchedule();
+}
+function hAssign(dets){
+  var out=[null,null],sl=HT.slots,act=sl.filter(function(s){return s.on;});
+  if(!dets.length)return out;
+  var far=Math.hypot(innerWidth,innerHeight)*0.4;
+  function dd(s,h){return Math.hypot(s.x-h.ax,s.y-h.ay);}
+  function free(){for(var i=0;i<2;i++)if(!sl[i].on&&!out[i])return sl[i];return null;}
+  if(dets.length===1){
+    var h=dets[0],best=null,bd=1e9;
+    act.forEach(function(s){var d=dd(s,h);if(d<bd){bd=d;best=s;}});
+    var f=free();
+    if(best&&(bd<far||!f))out[best.i]=h;else out[(f||sl[0]).i]=h;
+    return out;
+  }
+  if(act.length===2){
+    var straight=dd(sl[0],dets[0])+dd(sl[1],dets[1]),cross=dd(sl[0],dets[1])+dd(sl[1],dets[0]);
+    if(straight<=cross){out[0]=dets[0];out[1]=dets[1];}else{out[0]=dets[1];out[1]=dets[0];}
+    return out;
+  }
+  if(act.length===1){
+    var a=act[0],i0=dd(a,dets[0])<=dd(a,dets[1])?0:1;
+    out[a.i]=dets[i0];out[1-a.i]=dets[1-i0];
+    return out;
+  }
+  var lo=dets[0].ax<=dets[1].ax?0:1;
+  out[0]=dets[lo];out[1]=dets[1-lo];
+  return out;
+}
+function drawHands(dets){
+  var c=$('hfull'),g=c.getContext&&c.getContext('2d');if(!g)return;
+  g.setTransform(HT.d,0,0,HT.d,0,0);g.clearRect(0,0,innerWidth,innerHeight);
+  g.lineCap='round';
+  dets.forEach(function(h){
+    if(h.slot==null)return;
+    var P=h.P,col=HAND_COL[h.slot];
+    g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.35)';
+    HAND_LINKS.forEach(function(k){g.beginPath();g.moveTo(P[k[0]].x,P[k[0]].y);g.lineTo(P[k[1]].x,P[k[1]].y);g.stroke();});
+    g.lineWidth=2.5;g.strokeStyle='rgba(255,255,255,.9)';
+    HAND_LINKS.forEach(function(k){g.beginPath();g.moveTo(P[k[0]].x,P[k[0]].y);g.lineTo(P[k[1]].x,P[k[1]].y);g.stroke();});
+    P.forEach(function(p,i){var tip=i===4||i===8;g.beginPath();g.arc(p.x,p.y,tip?6:3.5,0,TAU);g.fillStyle=tip?col:'#FFFFFF';g.fill();if(tip){g.lineWidth=2;g.strokeStyle='#fff';g.stroke();}});
+  });
+}
+function hProcess(res,now){
+  var LM=(res&&res.landmarks)||[],WL=(res&&res.worldLandmarks)||[],dets=[];
+  for(var k=0;k<LM.length&&k<2;k++){
+    var L=LM[k],P=L.map(vmap),w3=WL[k],h={P:P,slot:null};
+    h.ax=0.7*P[8].x+0.3*P[4].x;h.ay=0.7*P[8].y+0.3*P[4].y;
+    if(w3&&w3.length>=21){h.r=dist3(w3[4],w3[8])/(dist3(w3[0],w3[9])||1);h.lo=0.30;h.hi=0.52;}
+    else{
+      var vw=HT.vw,vh=HT.vh;
+      h.r=Math.hypot((L[4].x-L[8].x)*vw,(L[4].y-L[8].y)*vh)/(Math.hypot((L[0].x-L[9].x)*vw,(L[0].y-L[9].y)*vh)||1);
+      h.lo=0.28;h.hi=0.42;
+    }
+    dets.push(h);
+  }
+  var out=hAssign(dets);
+  HT.slots.forEach(function(s){
+    var h=out[s.i],cur=s.cur;
+    if(h){
+      h.slot=s.i;
+      if(!s.on){s.on=true;s.fx.v=null;s.fy.v=null;s.pinch=false;}
+      if(!HT.seenAny){HT.seenAny=true;setTimeout(function(){if(HT.on)hMsg('');},3500);}
+      s.seen=now;
+      s.x=clamp(oe(s.fx,h.ax,now),0,innerWidth);s.y=clamp(oe(s.fy,h.ay,now),0,innerHeight);
+      cur.style.display='block';cur.style.transform='translate('+s.x+'px,'+s.y+'px)';
+      if(!s.pinch&&h.r<h.lo){s.pinch=true;cur.classList.add('pinch');hDown(s);}
+      else if(s.pinch&&h.r>h.hi){s.pinch=false;cur.classList.remove('pinch');hUp(s);}
+      else if(s.pinch)hMove(s);
+    }else if(s.on&&now-s.seen>450){hRelease(s);}
+  });
+  drawHands(dets);
+  /* hover highlights for any hand that is not pinching */
+  var set=[],atomHover=null;
+  HT.slots.forEach(function(s){
+    if(!s.on||s.pinch)return;
+    var el=document.elementFromPoint(s.x,s.y);
+    if(el===cv){var p=stagePt(s.x,s.y),w=s2w(p.x,p.y),a=hitAtom(w.x,w.y);if(a!=null&&atomHover==null)atomHover=a;}
+    else{var b=el&&el.closest?el.closest('button'):null;if(b&&set.indexOf(b)<0)set.push(b);}
+  });
+  HT.hov.forEach(function(e){if(set.indexOf(e)<0)e.classList.remove('hand-hover');});
+  set.forEach(function(e){e.classList.add('hand-hover');});
+  HT.hov=set;
+  if(!GH&&!DRAG&&HOVER!==atomHover){HOVER=atomHover;redraw();}
+}
+function hRelease(s){
+  if(s.pinch){s.pinch=false;s.cur.classList.remove('pinch');hUp(s);}
+  s.on=false;s.cur.style.display='none';
+}
+function hDown(s){
+  var x=s.x,y=s.y,id='hand'+s.i,el=document.elementFromPoint(x,y);s.down=null;if(!el)return;
+  if(el===cv){s.down={t:'cv'};cDown(x,y,id);return;}
+  var add=el.closest&&el.closest('[data-add]');
+  if(add&&!add.closest('.overlay')){s.down={t:'pal',el:add,x0:x,y0:y,drag:false,blocked:false};add.classList.add('hand-press');return;}
+  var btn=el.closest&&el.closest('button');
+  if(btn){s.down={t:'btn',el:btn};btn.classList.add('hand-press');}
+}
+function hMove(s){
+  var d=s.down;if(!d)return;
+  if(d.t==='cv')cMove(s.x,s.y,'hand'+s.i);
+  else if(d.t==='pal'){
+    if(!d.drag&&!d.blocked&&Math.hypot(s.x-d.x0,s.y-d.y0)>14){
+      d.el.classList.remove('hand-press');
+      if(GH&&HT.gOwner!==s.i)d.blocked=true;
+      else{d.drag=true;HT.gOwner=s.i;ghostStart(d.el.dataset.add);}
+    }
+    if(d.drag)ghostMove(s.x,s.y);
+  }
+}
+function hUp(s){
+  var d=s.down;s.down=null;if(!d)return;
+  var x=s.x,y=s.y;
+  if(d.t==='cv'){cUp(x,y,'hand'+s.i);return;}
+  d.el.classList.remove('hand-press');
+  if(d.t==='pal'){if(d.blocked)return;if(d.drag){HT.gOwner=-1;ghostDrop(x,y);}else d.el.click();return;}
+  var el=document.elementFromPoint(x,y);if(el&&d.el.contains(el))d.el.click();
+}
+
+/* ---------- Wiring ---------- */
+function initBuild(){
+  cv=$('bcv');ctx=cv.getContext?cv.getContext('2d'):null;
+  buildSig();buildShelf();readColors();load();
+  cv.addEventListener('pointerdown',function(e){try{cv.setPointerCapture(e.pointerId);}catch(x){}cDown(e.clientX,e.clientY,e.pointerId);});
+  cv.addEventListener('pointermove',function(e){cMove(e.clientX,e.clientY,e.pointerId);});
+  cv.addEventListener('pointerup',function(e){cUp(e.clientX,e.clientY,e.pointerId);});
+  cv.addEventListener('pointercancel',function(e){cUp(e.clientX,e.clientY,e.pointerId);});
+  cv.addEventListener('wheel',function(e){
+    e.preventDefault();var p=stagePt(e.clientX,e.clientY),w=s2w(p.x,p.y);
+    view.z=clamp(view.z*Math.exp(-e.deltaY*0.0015),0.3,2.5);view.x=w.x-(p.x-W/2)/view.z;view.y=w.y-(p.y-H/2)/view.z;redraw();
+  },{passive:false});
+  var shelf=document.querySelector('.shelf');
+  shelf.addEventListener('pointerdown',function(e){var a=e.target.closest('[data-add]');if(!a)return;PD={el:a,id:e.pointerId,x0:e.clientX,y0:e.clientY,drag:false};});
+  window.addEventListener('pointermove',function(e){
+    if(!PD||PD.id!==e.pointerId)return;
+    if(!PD.drag&&Math.hypot(e.clientX-PD.x0,e.clientY-PD.y0)>10){PD.drag=true;ghostStart(PD.el.dataset.add);}
+    if(PD.drag)ghostMove(e.clientX,e.clientY);
+  });
+  window.addEventListener('pointerup',function(e){if(!PD||PD.id!==e.pointerId)return;var d=PD;PD=null;if(d.drag){suppressClick=Date.now();ghostDrop(e.clientX,e.clientY);}});
+  window.addEventListener('pointercancel',function(e){if(PD&&PD.id===e.pointerId){if(PD.drag){$('ghost').style.display='none';GH=null;}PD=null;}});
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('[data-add]');
+    if(a){if(Date.now()-suppressClick<500)return;tapAdd(a.dataset.add);if(a.closest('.overlay'))closeOverlay();return;}
+    var c=e.target.closest&&e.target.closest('[data-cmd]');if(!c)return;
+    var k=c.dataset.cmd;
+    if(k==='mode')setMode(c.dataset.mode);
+    else if(k==='hand'){if(HT.on||HT.busy)handStop();else handStart();}
+    else if(k==='hclose')handStop();
+    else if(k==='shelf'){var at=c.dataset.shelf==='atoms';$('palAtoms').hidden=!at;$('palMols').hidden=at;document.querySelectorAll('.seg button').forEach(function(b){b.setAttribute('aria-selected',b===c);});}
+    else if(k==='allel')openOverlay();
+    else if(k==='ovclose')closeOverlay();
+    else if(k==='undo')undo();
+    else if(k==='fillh'){var ids=SELMOL||allIds();pushUndo();var n=fillH(ids);allMols().forEach(function(m){relax(m,60);});commit();if(n)toast('Added '+n+' hydrogen atom'+(n>1?'s':'')+'.');}
+    else if(k==='tidy')tidy();
+    else if(k==='fit')fit();
+    else if(k==='del')deleteSel();
+    else if(k==='clear'){pushUndo();S={atoms:{},bonds:{},units:{},next:S.next};rebuildAdj();SEL=null;commit();toast('Bench cleared. Undo brings it back.');}
+    else if(k==='order')setOrder(SEL&&SEL.t==='bond'?SEL.id:null,+c.dataset.o);
+    else if(k==='break'){if(SEL&&SEL.t==='bond'){pushUndo();var bb=S.bonds[SEL.id],keep=bb.a;removeBond(SEL.id);select({t:'atom',id:keep});commit();}}
+    else if(k==='hydro'){if(SEL&&SEL.t==='bond'){pushUndo();var b2=S.bonds[SEL.id],nm=linkName(b2),keep2=b2.oh||b2.a;hydrolyse(SEL.id);select({t:'atom',id:keep2});commit();toast(b2.link==='disulfide'?'The bridge broke and each sulfur got a hydrogen back.':'Hydrolysis: water split the '+nm+'.');}}
+    else if(k==='delmol'){if(SELMOL){pushUndo();SELMOL.forEach(removeAtom);SEL=null;commit();}}
+  });
+  $('elOverlay').addEventListener('click',function(e){if(e.target===$('elOverlay'))closeOverlay();});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')closeOverlay();
+    if($('buildView').hidden||/INPUT|TEXTAREA/.test((e.target&&e.target.tagName)||''))return;
+    if((e.metaKey||e.ctrlKey)&&(e.key==='z'||e.key==='Z')){e.preventDefault();undo();}
+    else if((e.key==='Delete'||e.key==='Backspace')&&SEL){e.preventDefault();deleteSel();}
+  });
+  if(window.ResizeObserver)new ResizeObserver(function(){resize();}).observe($('stage'));
+  window.addEventListener('resize',resize);
+  var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+  if(mq){var f=function(){readColors();redraw();};if(mq.addEventListener)mq.addEventListener('change',f);else if(mq.addListener)mq.addListener(f);}
+  if(window.MutationObserver)new MutationObserver(function(){readColors();redraw();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','class','style']});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+  var m='build';try{m=localStorage.getItem('bondbench-mode')||'build';}catch(e){}
+  setMode(m==='pair'?'pair':'build');
+  commit();
+}
+
+
+
+buildTable();
+update();
+initBuild();
+})();
+</script>
+</body>
+</html>
