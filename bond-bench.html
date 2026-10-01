@@ -232,7 +232,9 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .hcur.pinch::after{opacity:0}
 .hctl{pointer-events:auto;display:none;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:8px 12px;font-size:13px}
 body.hand-on .hctl{display:flex}
-.hctl input{width:130px;accent-color:#4D8DFF}
+.hctl input{width:110px;accent-color:#4D8DFF}
+.hbtn{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:8px;min-height:32px;padding:0 10px;font:600 13px/1 var(--body);cursor:pointer}
+.hfps{min-width:46px;text-align:right;opacity:.8;font-variant-numeric:tabular-nums}
 #hcur0{--hc:#4D8DFF}
 #hcur1{--hc:#FF9A3C}
 .hand-dock{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;display:none;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100vw - 28px);pointer-events:none}
@@ -258,7 +260,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v4 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v5 · 1 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -326,7 +328,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <div class="hcur" id="hcur0" aria-hidden="true"></div>
 <div class="hcur" id="hcur1" aria-hidden="true"></div>
 <div class="hand-dock" id="hdock">
-  <div class="hctl"><label for="hsens"><b>Pinch</b></label><span>firm</span><input type="range" id="hsens" min="0" max="1" step="0.05" value="0.5" aria-label="Pinch sensitivity"><span>easy</span></div>
+  <div class="hctl"><label for="hsens"><b>Pinch</b></label><span>firm</span><input type="range" id="hsens" min="0" max="1" step="0.05" value="0.5" aria-label="Pinch sensitivity"><span>easy</span><button type="button" class="hbtn" data-cmd="hands" id="hHands">2 hands</button><span class="hfps" id="hfps"></span></div>
   <div class="hstat" id="hstat" hidden><span id="hmsg"></span><button type="button" data-cmd="hclose">Close</button></div>
 </div>
 
@@ -2419,7 +2421,7 @@ var MP_MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/ha
 function mkSlot(i){return {i:i,on:false,x:0,y:0,px:0,py:0,ox:0,oy:0,offT:0,onN:0,offN:0,hist:[],fx:{v:null,d:0,t:0},fy:{v:null,d:0,t:0},pinch:false,seen:0,down:null,cur:null};}
 var HGAIN=1.12;
 function histAt(s,t){var h=s.hist,b=h[0]||{x:s.x,y:s.y};for(var i=h.length-1;i>=0;i--)if(h[i].t<=t){b=h[i];break;}return b;}
-var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
+var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,nh:2,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
 var HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 var HAND_COL=['#4D8DFF','#FF9A3C'];
 function hMsg(m,err){var s=$('hstat');$('hmsg').textContent=m||'';s.hidden=!m;$('hdock').classList.toggle('err',!!err);}
@@ -2457,19 +2459,23 @@ async function handStart(){
     HT.stream=st;var v=$('hvid');v.srcObject=st;v.muted=true;
     document.body.classList.add('hand-on');
     try{await v.play();}catch(e){}
-    if(!HT.lm){
+    if(!HT.lm&&!HT.wk){
       hMsg('Loading hand tracking…');
+      HT.wk=await initWorker();
+    }
+    if(!HT.lm&&!HT.wk){
       var vision;
       try{vision=await import(MP+'/vision_bundle.mjs');}catch(e){throw {k:'lib'};}
       var fs;try{fs=await vision.FilesetResolver.forVisionTasks(MP+'/wasm');}catch(e){throw {k:'lib'};}
-      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
-      try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'));}
-      catch(e){try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'));}catch(e2){throw {k:'lib'};}}
+      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:HT.nh,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
+      try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'));HT.dg='GPU';}
+      catch(e){try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'));HT.dg='CPU';}catch(e2){throw {k:'lib'};}}
     }
     if(!HT.stream){HT.busy=false;return;}
     if(!HT.sc)HT.sc=document.createElement('canvas');
     if(!HT.rs){HT.rs=true;window.addEventListener('resize',function(){if(HT.on)resizeFull();});}
-    resizeFull();HT.on=true;HT.seenAny=false;HT.useVideo=false;
+    resizeFull();HT.on=true;HT.seenAny=false;HT.useVideo=false;HT.wbusy=false;HT.fc=0;HT.ft=performance.now();
+    HT.slots.forEach(function(s){s.dx=null;});HT.draf=requestAnimationFrame(hDisp);
     hMsg('Use one or two hands. Pinch your thumb and finger to grab or tap, then open them to let go. Pinch with both hands on the bench to zoom.');
     hSchedule();
   }catch(err){
@@ -2491,7 +2497,7 @@ function handStop(keep){
   HT.on=false;
   var v=$('hvid');
   if(v){try{if(v.cancelVideoFrameCallback&&HT.vf)v.cancelVideoFrameCallback(HT.vf);}catch(e){}v.srcObject=null;}
-  cancelAnimationFrame(HT.raf);HT.vf=0;
+  cancelAnimationFrame(HT.raf);cancelAnimationFrame(HT.draf);HT.vf=0;HT.wbusy=false;
   HT.slots.forEach(function(s){if(s.cur)hRelease(s);s.fx.v=null;s.fy.v=null;});
   if(HT.stream){HT.stream.getTracks().forEach(function(t){t.stop();});HT.stream=null;}
   HT.hov.forEach(function(e){e.classList.remove('hand-hover');});HT.hov=[];
@@ -2501,25 +2507,81 @@ function handStop(keep){
   setHandBtn(false);
   if(!keep){$('hdock').classList.remove('on');hMsg('');}
 }
+var WK_SRC="let lm=null;self.onmessage=async function(e){var m=e.data;"+
+ "if(m.t==='init'){try{var vision=await import(m.mp+'/vision_bundle.mjs');var fs=await vision.FilesetResolver.forVisionTasks(m.mp+'/wasm',true);"+
+ "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};"+
+ "var dg='GPU';try{lm=await vision.HandLandmarker.createFromOptions(fs,o('GPU'));}catch(x){dg='CPU';lm=await vision.HandLandmarker.createFromOptions(fs,o('CPU'));}"+
+ "self.postMessage({t:'ready',dg:dg});}catch(err){self.postMessage({t:'fail',msg:String(err&&err.message||err)});}}"+
+ "else if(m.t==='frame'){var r=null;try{r=lm.detectForVideo(m.img,m.ts);}catch(x){}try{m.img.close();}catch(x){}self.postMessage({t:'res',lm:r&&r.landmarks?r.landmarks:[]});}"+
+ "else if(m.t==='opts'){try{await lm.setOptions({numHands:m.n});}catch(x){}}};";
+/* Hand tracking runs in a background worker when the browser allows it, so the app stays smooth */
+function initWorker(){
+  return new Promise(function(res){
+    if(!window.Worker||!window.createImageBitmap){res(null);return;}
+    var w;try{w=new Worker(URL.createObjectURL(new Blob([WK_SRC],{type:'text/javascript'})),{type:'module'});}catch(e){res(null);return;}
+    var done=false,to=setTimeout(function(){fin(null);},30000);
+    function fin(x){if(done)return;done=true;clearTimeout(to);if(!x){try{w.terminate();}catch(e){}}res(x);}
+    w.onmessage=function(e){var m=e.data;
+      if(m.t==='ready'){if(m.dg!=='GPU'){fin(null);return;}
+        w.onmessage=function(ev){var r=ev.data;if(r.t!=='res')return;HT.wbusy=false;if(!HT.on)return;hCount();hProcess({landmarks:r.lm},performance.now());};
+        fin(w);}
+      else if(m.t==='fail')fin(null);};
+    w.onerror=function(){fin(null);};
+    w.postMessage({t:'init',mp:MP,model:MP_MODEL,n:HT.nh});
+  });
+}
+function hCount(){
+  HT.fc++;var t=performance.now();
+  if(t-HT.ft>=1000){var f=$('hfps');if(f)f.textContent=Math.round(HT.fc*1000/(t-HT.ft))+' fps';HT.fc=0;HT.ft=t;}
+}
+/* Cursor glides at screen rate between tracking updates */
+function hDisp(){
+  if(!HT.on)return;
+  HT.slots.forEach(function(s){
+    if(!s.on||!s.cur)return;
+    if(s.dx==null){s.dx=s.px;s.dy=s.py;}
+    s.dx+=(s.px-s.dx)*0.6;s.dy+=(s.py-s.dy)*0.6;
+    s.cur.style.transform='translate('+s.dx.toFixed(1)+'px,'+s.dy.toFixed(1)+'px)';
+  });
+  HT.draf=requestAnimationFrame(hDisp);
+}
 function hFrame(){
   if(!HT.on)return;
   var v=$('hvid');
   if(v.readyState>=2&&v.videoWidth){
     HT.vw=v.videoWidth;HT.vh=v.videoHeight;
-    var src=v;
-    if(!HT.useVideo){
-      try{
-        var sw=320,sh=Math.max(1,Math.round(sw*HT.vh/HT.vw));
-        if(HT.sc.width!==sw||HT.sc.height!==sh){HT.sc.width=sw;HT.sc.height=sh;HT.scx=HT.sc.getContext('2d');}
-        HT.scx.drawImage(v,0,0,sw,sh);src=HT.sc;
-      }catch(e){HT.useVideo=true;src=v;}
+    var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;
+    if(HT.wk){
+      if(HT.wbusy&&ts-HT.wsent>2000)HT.wbusy=false;
+      if(!HT.wbusy){
+        HT.wbusy=true;HT.wsent=ts;HT.lastTs=ts;
+        createImageBitmap(v).then(function(bm){
+          if(!HT.on||!HT.wk){try{bm.close();}catch(e){}HT.wbusy=false;return;}
+          HT.wk.postMessage({t:'frame',img:bm,ts:ts},[bm]);
+        },function(){HT.wbusy=false;});
+      }
+    }else{
+      var src=v;
+      if(HT.dg!=='GPU'&&!HT.useVideo){
+        try{
+          var sw=320,sh=Math.max(1,Math.round(sw*HT.vh/HT.vw));
+          if(HT.sc.width!==sw||HT.sc.height!==sh){HT.sc.width=sw;HT.sc.height=sh;HT.scx=HT.sc.getContext('2d');}
+          HT.scx.drawImage(v,0,0,sw,sh);src=HT.sc;
+        }catch(e){HT.useVideo=true;src=v;}
+      }
+      HT.lastTs=ts;
+      var res=null;
+      try{res=HT.lm.detectForVideo(src,ts);}catch(e){if(!HT.useVideo)HT.useVideo=true;}
+      hCount();hProcess(res,ts);
     }
-    var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;HT.lastTs=ts;
-    var res=null;
-    try{res=HT.lm.detectForVideo(src,ts);}catch(e){if(!HT.useVideo)HT.useVideo=true;}
-    hProcess(res,ts);
   }
   hSchedule();
+}
+function setHands(n){
+  HT.nh=n;try{localStorage.setItem('bondbench-hands',n);}catch(e){}
+  var b=$('hHands');if(b)b.textContent=n===2?'2 hands':'1 hand';
+  if(HT.wk)HT.wk.postMessage({t:'opts',n:n});else if(HT.lm&&HT.lm.setOptions){try{HT.lm.setOptions({numHands:n});}catch(e){}}
+  if(n===1&&HT.slots[1].on)hRelease(HT.slots[1]);
 }
 function hAssign(dets){
   var out=[null,null],sl=HT.slots,act=sl.filter(function(s){return s.on;});
@@ -2566,7 +2628,7 @@ function hProcess(res,now){
   var LM=(res&&res.landmarks)||[],dets=[],vw=HT.vw,vh=HT.vh;
   function dn(a,b){return Math.hypot((a.x-b.x)*vw,(a.y-b.y)*vh,((a.z||0)-(b.z||0))*vw);}
   var sens=HT.sens==null?0.5:HT.sens,lo=0.24+0.22*sens,hi=lo+0.14;
-  for(var k=0;k<LM.length&&k<2;k++){
+  for(var k=0;k<LM.length&&k<HT.nh;k++){
     var L=LM[k],P=L.map(vmap),h={P:P,slot:null};
     h.ax=(P[4].x+P[8].x)/2;h.ay=(P[4].y+P[8].y)/2;
     var sc=(dn(L[0],L[5])+dn(L[5],L[17])+dn(L[0],L[17]))/3||1;
@@ -2578,7 +2640,7 @@ function hProcess(res,now){
     var h=out[s.i],cur=s.cur;
     if(h){
       h.slot=s.i;
-      if(!s.on){s.on=true;s.fx.v=null;s.fy.v=null;s.pinch=false;s.hist=[];s.ox=s.oy=0;s.onN=s.offN=0;}
+      if(!s.on){s.on=true;s.fx.v=null;s.fy.v=null;s.pinch=false;s.hist=[];s.ox=s.oy=0;s.onN=s.offN=0;s.dx=null;}
       if(!HT.seenAny){HT.seenAny=true;setTimeout(function(){if(HT.on)hMsg('');},3500);}
       s.seen=now;
       s.x=clamp(oe(s.fx,h.ax,now),0,innerWidth);s.y=clamp(oe(s.fy,h.ay,now),0,innerHeight);
@@ -2598,7 +2660,7 @@ function hProcess(res,now){
           s.pinch=false;s.onN=s.offN=0;cur.classList.remove('pinch');hUp(s);
         }else hMove(s);
       }
-      cur.style.display='block';cur.style.transform='translate('+s.px+'px,'+s.py+'px)';
+      cur.style.display='block';
       cur.style.setProperty('--p',s.pinch?1:clamp((1-h.r)/(1-lo),0,1).toFixed(2));
     }else if(s.on&&now-s.seen>450){hRelease(s);}
   });
@@ -2677,6 +2739,7 @@ function initBuild(){
     if(k==='mode')setMode(c.dataset.mode);
     else if(k==='hand'){if(HT.on||HT.busy)handStop();else handStart();}
     else if(k==='hclose')handStop();
+    else if(k==='hands')setHands(HT.nh===2?1:2);
     else if(k==='shelf'){var at=c.dataset.shelf==='atoms';$('palAtoms').hidden=!at;$('palMols').hidden=at;document.querySelectorAll('.seg button').forEach(function(b){b.setAttribute('aria-selected',b===c);});}
     else if(k==='allel')openOverlay();
     else if(k==='ovclose')closeOverlay();
@@ -2700,6 +2763,7 @@ function initBuild(){
     else if((e.key==='Delete'||e.key==='Backspace')&&SEL){e.preventDefault();deleteSel();}
   });
   var hs=$('hsens');if(hs){try{var sv=localStorage.getItem('bondbench-pinch');if(sv!=null)hs.value=sv;}catch(e){}HT.sens=+hs.value;
+    try{var nh=+localStorage.getItem('bondbench-hands');if(nh===1||nh===2)setHands(nh);}catch(e){}
     hs.addEventListener('input',function(){HT.sens=+hs.value;try{localStorage.setItem('bondbench-pinch',hs.value);}catch(e){}});}
   if(window.ResizeObserver)new ResizeObserver(function(){resize();}).observe($('stage'));
   window.addEventListener('resize',resize);
