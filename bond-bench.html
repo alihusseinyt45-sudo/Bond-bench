@@ -230,7 +230,7 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .hcur::after{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--hc);opacity:.6;transform:scale(var(--p,0));transition:transform .05s linear}
 .hcur.pinch{width:26px;height:26px;margin:-13px 0 0 -13px;background:var(--hc)}
 .hcur.pinch::after{opacity:0}
-.hctl{pointer-events:auto;display:none;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:8px 12px;font-size:13px}
+.hctl{pointer-events:auto;display:none;flex-wrap:wrap;justify-content:flex-end;max-width:min(560px,calc(100vw - 28px));align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:8px 12px;font-size:13px}
 body.hand-on .hctl{display:flex}
 .hctl input{width:110px;accent-color:#4D8DFF}
 .hbtn{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:8px;min-height:32px;padding:0 10px;font:600 13px/1 var(--body);cursor:pointer}
@@ -260,7 +260,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v6 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v7 · 1 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -328,7 +328,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <div class="hcur" id="hcur0" aria-hidden="true"></div>
 <div class="hcur" id="hcur1" aria-hidden="true"></div>
 <div class="hand-dock" id="hdock">
-  <div class="hctl"><label for="hsens"><b>Pinch</b></label><span>firm</span><input type="range" id="hsens" min="0" max="1" step="0.05" value="0.5" aria-label="Pinch sensitivity"><span>easy</span><button type="button" class="hbtn" data-cmd="hands" id="hHands">2 hands</button><span class="hfps" id="hfps"></span></div>
+  <div class="hctl"><label for="hsens"><b>Pinch</b></label><span>firm</span><input type="range" id="hsens" min="0" max="1" step="0.05" value="0.5" aria-label="Pinch sensitivity"><span>easy</span><label for="hreach"><b>Reach</b></label><input type="range" id="hreach" min="1" max="1.8" step="0.05" value="1.35" aria-label="Reach: how far your hand needs to move"><button type="button" class="hbtn" data-cmd="hands" id="hHands">2 hands</button><span class="hfps" id="hfps"></span></div>
   <div class="hstat" id="hstat" hidden><span id="hmsg"></span><button type="button" data-cmd="hclose">Close</button></div>
 </div>
 
@@ -2419,9 +2419,9 @@ function setMode(m){
 var MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';
 var MP_MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 function mkSlot(i){return {i:i,on:false,x:0,y:0,px:0,py:0,ox:0,oy:0,offT:0,onN:0,offN:0,hist:[],fx:{v:null,d:0,t:0},fy:{v:null,d:0,t:0},pinch:false,seen:0,down:null,cur:null};}
-var HGAIN=1.12;
+function setReach(g){HT.gain=g;var v=$('hvid');if(v)v.style.transform='scale('+(-g)+','+g+')';try{localStorage.setItem('bondbench-reach',g);}catch(e){}}
 function histAt(s,t){var h=s.hist,b=h[0]||{x:s.x,y:s.y};for(var i=h.length-1;i>=0;i--)if(h[i].t<=t){b=h[i];break;}return b;}
-var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,nh:2,vfN:0,sentN:-1,noResize:false,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
+var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,gain:1.35,nh:2,vfN:0,sentN:-1,noResize:false,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
 var HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 var HAND_COL=['#4D8DFF','#FF9A3C'];
 function hMsg(m,err){var s=$('hstat');$('hmsg').textContent=m||'';s.hidden=!m;$('hdock').classList.toggle('err',!!err);}
@@ -2440,7 +2440,8 @@ function dist3(a,b){return Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);}
 function vmap(p){
   var W=innerWidth,H=innerHeight,s=Math.max(W/HT.vw,H/HT.vh),dw=HT.vw*s,dh=HT.vh*s;
   var x=(1-p.x)*dw-(dw-W)/2,y=p.y*dh-(dh-H)/2;
-  return {x:W/2+(x-W/2)*HGAIN,y:H/2+(y-H/2)*HGAIN};
+  var g=HT.gain||1.35;
+  return {x:W/2+(x-W/2)*g,y:H/2+(y-H/2)*g};
 }
 function resizeFull(){
   var c=$('hfull'),d=1;HT.d=d;
@@ -2467,7 +2468,7 @@ async function handStart(){
       var vision;
       try{vision=await import(MP+'/vision_bundle.mjs');}catch(e){throw {k:'lib'};}
       var fs;try{fs=await vision.FilesetResolver.forVisionTasks(MP+'/wasm');}catch(e){throw {k:'lib'};}
-      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:HT.nh,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};
+      var opts=function(dg){return {baseOptions:{modelAssetPath:MP_MODEL,delegate:dg},runningMode:'VIDEO',numHands:HT.nh,minHandDetectionConfidence:0.4,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};
       try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'));HT.dg='GPU';}
       catch(e){try{HT.lm=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'));HT.dg='CPU';}catch(e2){throw {k:'lib'};}}
     }
@@ -2509,7 +2510,7 @@ function handStop(keep){
 }
 var WK_SRC="let lm=null;self.onmessage=async function(e){var m=e.data;"+
  "if(m.t==='init'){try{var vision=await import(m.mp+'/vision_bundle.mjs');var fs=await vision.FilesetResolver.forVisionTasks(m.mp+'/wasm',true);"+
- "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};"+
+ "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.4,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};"+
  "var dg='GPU';try{lm=await vision.HandLandmarker.createFromOptions(fs,o('GPU'));}catch(x){dg='CPU';lm=await vision.HandLandmarker.createFromOptions(fs,o('CPU'));}"+
  "self.postMessage({t:'ready',dg:dg});}catch(err){self.postMessage({t:'fail',msg:String(err&&err.message||err)});}}"+
  "else if(m.t==='frame'){var r=null;try{r=lm.detectForVideo(m.img,m.ts);}catch(x){}try{m.img.close();}catch(x){}self.postMessage({t:'res',lm:r&&r.landmarks?r.landmarks:[]});}"+
@@ -2772,6 +2773,8 @@ function initBuild(){
   });
   var hs=$('hsens');if(hs){try{var sv=localStorage.getItem('bondbench-pinch');if(sv!=null)hs.value=sv;}catch(e){}HT.sens=+hs.value;
     try{var nh=+localStorage.getItem('bondbench-hands');if(nh===1||nh===2)setHands(nh);}catch(e){}
+    var hr=$('hreach');try{var rv=+localStorage.getItem('bondbench-reach');if(rv>=1&&rv<=1.8)hr.value=rv;}catch(e){}setReach(+hr.value);
+    hr.addEventListener('input',function(){setReach(+hr.value);});
     hs.addEventListener('input',function(){HT.sens=+hs.value;try{localStorage.setItem('bondbench-pinch',hs.value);}catch(e){}});}
   if(window.ResizeObserver)new ResizeObserver(function(){resize();}).observe($('stage'));
   window.addEventListener('resize',resize);
