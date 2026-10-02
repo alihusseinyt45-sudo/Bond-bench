@@ -181,6 +181,14 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .tools{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
 .tb{pointer-events:auto;appearance:none;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;min-height:40px;padding:0 13px;font:600 14px/1 var(--body);cursor:pointer}
 .tb:disabled{opacity:.4;cursor:default}
+.tb.fullonly{display:none}
+body.full.mode-build .tb.fullonly{display:inline-block}
+body.full.mode-build .top{position:relative;z-index:6}
+body.full.mode-build .stage{position:fixed;inset:0;z-index:2;border-radius:0;box-shadow:none;height:auto;min-height:0}
+body.full.mode-build .tools{top:calc(74px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px))}
+body.full.mode-build .binfo{position:fixed;z-index:7;right:calc(12px + env(safe-area-inset-right,0px));top:calc(126px + env(safe-area-inset-top,0px));width:min(320px,40vw);max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.25),inset 0 0 0 1.5px var(--line)}
+body.full.mode-build.noinfo .binfo{display:none}
+body.full.mode-build .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .tb[aria-pressed="true"]{background:#E5483A;border-color:#E5483A;color:#fff}
 .tb:active:not(:disabled){transform:scale(.96)}
 .toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);background:var(--accent);color:var(--accent-ink);padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.35;opacity:0;pointer-events:none;transition:opacity .2s ease}
@@ -215,7 +223,7 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 }
 
 /* ---------- All-elements overlay ---------- */
-.float{position:fixed;z-index:30;left:20px;top:120px;width:var(--fw,560px);max-width:calc(100vw - 16px);max-height:calc(100vh - 24px);display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.28),inset 0 0 0 1.5px var(--line);border-radius:16px}
+.float{position:fixed;z-index:30;left:20px;top:120px;width:var(--fw,330px);max-width:calc(100vw - 16px);max-height:min(48vh,460px);display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.28),inset 0 0 0 1.5px var(--line);border-radius:16px}
 .fhead{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;background:var(--inset);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .fhead.drag{cursor:grabbing}
 .fhead b{flex:1;font:700 15px/1 var(--display)}
@@ -223,8 +231,14 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .fbtn{appearance:none;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;min-height:34px;min-width:38px;padding:0 10px;font:600 13px/1 var(--body);cursor:pointer}
 .fbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;overscroll-behavior:contain;min-height:0}
 .float.min .fbody{display:none}
-.float .pal{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));grid-template-rows:none;grid-auto-columns:auto;overflow:visible;padding-bottom:0;touch-action:pan-y}
-.float .pal.mols{grid-template-columns:1fr 1fr}
+.float.min{width:auto}
+.float .seg button{min-height:34px;font-size:13px}
+.fbody{gap:8px}
+.float .pal{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));grid-template-rows:none;grid-auto-columns:auto;overflow:visible;padding-bottom:0;touch-action:pan-y}
+.float .pal.mols{grid-template-columns:1fr}
+.float .atom-btn .n{display:none}
+.float .atom-btn .s{font-size:19px}
+.float .mol-btn{min-height:44px}
 .float .pal .grp,.float .shelf-note{display:block}
 .float .mol-btn{grid-column:auto}
 .float .grp{grid-column:1/-1}
@@ -234,7 +248,7 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .ftable .el .n{font-size:clamp(6px,1.6cqw,10px)}
 .ftable .pt{gap:2px}
 .ftable .el{cursor:grab;touch-action:pan-y}
-@media (max-width:900px){.float{--fw:min(560px,94vw)!important}}
+@media (max-width:600px){.float{max-width:94vw}}
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(8,16,22,.5);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .overlay.open{display:flex}
 .ov-panel{width:min(1100px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:18px;padding:14px}
@@ -280,7 +294,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v8 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v9 · 1 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -295,14 +309,14 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
         <button type="button" class="fbtn" data-cmd="fmin" id="fMin" aria-label="Minimise toolbox">–</button></div>
       <div class="fbody">
         <div class="seg" role="tablist" aria-label="Toolbox">
-          <button type="button" role="tab" data-cmd="shelf" data-shelf="table" aria-selected="true">Periodic table</button>
-          <button type="button" role="tab" data-cmd="shelf" data-shelf="atoms" aria-selected="false">Common</button>
+          <button type="button" role="tab" data-cmd="shelf" data-shelf="atoms" aria-selected="true">Common</button>
+          <button type="button" role="tab" data-cmd="shelf" data-shelf="table" aria-selected="false">Table</button>
           <button type="button" role="tab" data-cmd="shelf" data-shelf="mols" aria-selected="false">Molecules</button>
         </div>
-        <div class="ftable" id="palTable"><div class="pt" id="pt2"></div></div>
-        <div class="pal" id="palAtoms" hidden></div>
+        <div class="ftable" id="palTable" hidden><div class="pt" id="pt2"></div></div>
+        <div class="pal" id="palAtoms"></div>
         <div class="pal mols" id="palMols" hidden></div>
-        <p class="shelf-note" id="shelfNote">Drag the top bar to move the toolbox. Tap to add, or drag onto the bench.</p>
+        <p class="shelf-note" id="shelfNote">Drag the bar to move it, – to tuck it away.</p>
       </div>
     </aside>
     <div class="stage" id="stage">
@@ -315,6 +329,8 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
         <button class="tb" type="button" data-cmd="del" id="tDel">Delete</button>
         <button class="tb" type="button" data-cmd="clear" id="tClear">Clear</button>
         <button class="tb" type="button" data-cmd="pull" id="tPull" aria-pressed="false">Pull bonds</button>
+        <button class="tb" type="button" data-cmd="full" id="tFull" aria-pressed="false">Full screen</button>
+        <button class="tb fullonly" type="button" data-cmd="info" id="tInfo" aria-pressed="true">Details</button>
       </div>
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
@@ -2421,12 +2437,26 @@ function ghostDrop(x,y){
   if(!onDrop(ids,spec.indexOf('el:')===0?ids[0]:null))select({t:'atom',id:ids[spec.indexOf('tpl:')===0?(TPL[spec.slice(4)].anchor||0):0]});
   commit();
 }
+var FULL=false;
+function setFull(on){
+  FULL=on;document.body.classList.toggle('full',on);
+  var b=$('tFull');if(b){b.setAttribute('aria-pressed',on);b.textContent=on?'Exit full screen':'Full screen';}
+  requestAnimationFrame(function(){resize();applyFloat();redraw();});
+}
+function browserFull(on){
+  var d=document,el=d.documentElement;
+  try{
+    if(on){var f=el.requestFullscreen||el.webkitRequestFullscreen;if(f&&!(d.fullscreenElement||d.webkitFullscreenElement)){var r=f.call(el);if(r&&r.catch)r.catch(function(){});}}
+    else{var x=d.exitFullscreen||d.webkitExitFullscreen;if(x&&(d.fullscreenElement||d.webkitFullscreenElement)){var r2=x.call(d);if(r2&&r2.catch)r2.catch(function(){});}}
+  }catch(e){}
+}
 function openOverlay(){}
 function closeOverlay(){}
-var FSIZES=[420,560,720],FL={x:null,y:null,sz:1,min:false};
+var FSIZES=[330,430,540],FL={x:null,y:null,sz:0,min:true,tab:'atoms'};
 function applyFloat(){
   var F=$('floatPal');if(!F)return;
-  F.style.setProperty('--fw',FSIZES[FL.sz]+'px');F.classList.toggle('min',FL.min);
+  var fw=FSIZES[FL.sz];if(FL.tab==='table')fw=Math.max(fw,520);
+  F.style.setProperty('--fw',fw+'px');F.classList.toggle('min',FL.min);
   $('fMin').textContent=FL.min?'+':'–';$('fSize').textContent=FL.sz===2?'Smaller':'Bigger';
   var r=F.getBoundingClientRect(),w=r.width||FSIZES[FL.sz],hh=r.height||300;
   if(FL.x==null){FL.x=20;FL.y=Math.max(90,innerHeight-hh-24);}
@@ -2434,10 +2464,11 @@ function applyFloat(){
   F.style.left=FL.x+'px';F.style.top=FL.y+'px';
 }
 function moveFloat(x,y){FL.x=x;FL.y=y;applyFloat();}
-function saveFloat(){try{localStorage.setItem('bondbench-float',JSON.stringify(FL));}catch(e){}}
+function saveFloat(){try{localStorage.setItem('bondbench-float2',JSON.stringify(FL));}catch(e){}}
+function showTab(sh){FL.tab=sh;$('palTable').hidden=sh!=='table';$('palAtoms').hidden=sh!=='atoms';$('palMols').hidden=sh!=='mols';document.querySelectorAll('.float .seg button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.shelf===sh);});}
 function initFloat(){
-  try{var v=JSON.parse(localStorage.getItem('bondbench-float')||'null');if(v)FL=Object.assign(FL,v);}catch(e){}
-  applyFloat();
+  try{var v=JSON.parse(localStorage.getItem('bondbench-float2')||'null');if(v)FL=Object.assign(FL,v);}catch(e){}
+  showTab(FL.tab||'atoms');applyFloat();
   var hd=$('fHead'),FD=null;
   hd.addEventListener('pointerdown',function(e){if(e.target.closest('button'))return;var r=$('floatPal').getBoundingClientRect();FD={id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};hd.classList.add('drag');try{hd.setPointerCapture(e.pointerId);}catch(x){}e.preventDefault();});
   hd.addEventListener('pointermove',function(e){if(FD&&FD.id===e.pointerId)moveFloat(e.clientX-FD.dx,e.clientY-FD.dy);});
@@ -2548,6 +2579,7 @@ function handStop(keep){
   var c=$('hfull'),g=c&&c.getContext&&c.getContext('2d');if(g)g.clearRect(0,0,c.width,c.height);
   document.body.classList.remove('hand-on');
   setHandBtn(false);
+  if(HT.autoFull){HT.autoFull=false;setFull(false);browserFull(false);}
   if(!keep){$('hdock').classList.remove('on');hMsg('');}
 }
 var WK_SRC="let lm=null;self.onmessage=async function(e){var m=e.data;"+
@@ -2799,10 +2831,12 @@ function initBuild(){
     var c=e.target.closest&&e.target.closest('[data-cmd]');if(!c)return;
     var k=c.dataset.cmd;
     if(k==='mode')setMode(c.dataset.mode);
-    else if(k==='hand'){if(HT.on||HT.busy)handStop();else handStart();}
+    else if(k==='hand'){if(HT.on||HT.busy)handStop();else{if(!FULL&&!$('buildView').hidden){setFull(true);browserFull(true);HT.autoFull=true;}handStart();}}
     else if(k==='hclose')handStop();
     else if(k==='hands')setHands(HT.nh===2?1:2);
-    else if(k==='shelf'){var sh=c.dataset.shelf;$('palTable').hidden=sh!=='table';$('palAtoms').hidden=sh!=='atoms';$('palMols').hidden=sh!=='mols';document.querySelectorAll('.float .seg button').forEach(function(b){b.setAttribute('aria-selected',b===c);});applyFloat();}
+    else if(k==='shelf'){showTab(c.dataset.shelf);applyFloat();saveFloat();}
+    else if(k==='full'){var on=!FULL;setFull(on);browserFull(on);HT.autoFull=false;}
+    else if(k==='info'){var hid=document.body.classList.toggle('noinfo');c.setAttribute('aria-pressed',!hid);}
     else if(k==='fmin'){FL.min=!FL.min;applyFloat();saveFloat();}
     else if(k==='fsize'){FL.sz=FL.sz===2?1:FL.sz+1;applyFloat();saveFloat();}
     else if(k==='allel')openOverlay();
