@@ -152,12 +152,12 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 .intro h2{font-family:var(--display);font-weight:700;margin:0;line-height:1.02;font-size:24px;font-size:clamp(18px,4cqw,36px);letter-spacing:-.01em}
 
 /* ---------- Build layout ---------- */
-.build{flex:1;display:grid;grid-template-columns:228px minmax(0,1fr) 320px;gap:14px;min-height:520px}
+.build{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;min-height:520px}
 @media (min-width:901px){
   body.mode-build .shell{height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
   .build{min-height:0}
 }
-@media (min-width:901px) and (max-width:1180px){.build{grid-template-columns:208px minmax(0,1fr) 280px}}
+@media (min-width:901px) and (max-width:1180px){.build{grid-template-columns:minmax(0,1fr) 280px}}
 .shelf,.binfo{background:var(--panel);border-radius:16px;overflow:auto;overscroll-behavior:contain;min-height:0}
 .shelf{padding:12px;display:flex;flex-direction:column;gap:10px}
 .seg{display:flex;gap:3px;background:var(--inset);border-radius:10px;padding:3px}
@@ -215,6 +215,26 @@ main{flex:1;display:flex;flex-direction:column;width:100%;max-width:1600px;margi
 }
 
 /* ---------- All-elements overlay ---------- */
+.float{position:fixed;z-index:30;left:20px;top:120px;width:var(--fw,560px);max-width:calc(100vw - 16px);max-height:calc(100vh - 24px);display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.28),inset 0 0 0 1.5px var(--line);border-radius:16px}
+.fhead{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;background:var(--inset);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.fhead.drag{cursor:grabbing}
+.fhead b{flex:1;font:700 15px/1 var(--display)}
+.grip{font-size:18px;line-height:1;color:var(--ink2)}
+.fbtn{appearance:none;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;min-height:34px;min-width:38px;padding:0 10px;font:600 13px/1 var(--body);cursor:pointer}
+.fbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;overscroll-behavior:contain;min-height:0}
+.float.min .fbody{display:none}
+.float .pal{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));grid-template-rows:none;grid-auto-columns:auto;overflow:visible;padding-bottom:0;touch-action:pan-y}
+.float .pal.mols{grid-template-columns:1fr 1fr}
+.float .pal .grp,.float .shelf-note{display:block}
+.float .mol-btn{grid-column:auto}
+.float .grp{grid-column:1/-1}
+.ftable{container-type:inline-size}
+.ftable[hidden]{display:none}
+.ftable .el .s{font-size:clamp(10px,3.1cqw,20px)}
+.ftable .el .n{font-size:clamp(6px,1.6cqw,10px)}
+.ftable .pt{gap:2px}
+.ftable .el{cursor:grab;touch-action:pan-y}
+@media (max-width:900px){.float{--fw:min(560px,94vw)!important}}
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(8,16,22,.5);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .overlay.open{display:flex}
 .ov-panel{width:min(1100px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:18px;padding:14px}
@@ -260,7 +280,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v7 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v8 · 1 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -269,14 +289,21 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 </header>
 <main>
   <section class="view build" id="buildView" aria-label="Build molecules">
-    <aside class="shelf" aria-label="Atoms and molecules">
-      <div class="seg" role="tablist" aria-label="Shelf">
-        <button type="button" role="tab" data-cmd="shelf" data-shelf="atoms" aria-selected="true">Atoms</button>
-        <button type="button" role="tab" data-cmd="shelf" data-shelf="mols" aria-selected="false">Molecules</button>
+    <aside class="shelf float" id="floatPal" aria-label="Toolbox: elements and molecules">
+      <div class="fhead" id="fHead"><span class="grip" aria-hidden="true">⠿</span><b>Toolbox</b>
+        <button type="button" class="fbtn" data-cmd="fsize" id="fSize">Bigger</button>
+        <button type="button" class="fbtn" data-cmd="fmin" id="fMin" aria-label="Minimise toolbox">–</button></div>
+      <div class="fbody">
+        <div class="seg" role="tablist" aria-label="Toolbox">
+          <button type="button" role="tab" data-cmd="shelf" data-shelf="table" aria-selected="true">Periodic table</button>
+          <button type="button" role="tab" data-cmd="shelf" data-shelf="atoms" aria-selected="false">Common</button>
+          <button type="button" role="tab" data-cmd="shelf" data-shelf="mols" aria-selected="false">Molecules</button>
+        </div>
+        <div class="ftable" id="palTable"><div class="pt" id="pt2"></div></div>
+        <div class="pal" id="palAtoms" hidden></div>
+        <div class="pal mols" id="palMols" hidden></div>
+        <p class="shelf-note" id="shelfNote">Drag the top bar to move the toolbox. Tap to add, or drag onto the bench.</p>
       </div>
-      <div class="pal" id="palAtoms"></div>
-      <div class="pal mols" id="palMols" hidden></div>
-      <p class="shelf-note" id="shelfNote">Tap to add, or drag onto the bench.</p>
     </aside>
     <div class="stage" id="stage">
       <canvas id="bcv" role="img" aria-label="Molecule bench"></canvas>
@@ -313,13 +340,6 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
     </div>
   </section>
 </main>
-</div>
-
-<div class="overlay" id="elOverlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
-  <div class="ov-panel">
-    <div class="ov-head"><h2 id="ovTitle">Pick any element</h2><button class="btn ghost" type="button" data-cmd="ovclose">Close</button></div>
-    <div class="table-wrap"><div class="pt" id="pt2"></div></div>
-  </div>
 </div>
 
 <div id="ghost" aria-hidden="true"></div>
@@ -2371,7 +2391,6 @@ function renderInfo(){
 function buildShelf(){
   var h='';
   ATOM_SHELF.forEach(function(s){var c=cpk(s);h+='<button class="atom-btn" type="button" data-add="el:'+s+'" style="--f:'+c[0]+';--k:'+c[1]+'" aria-label="Add '+EL[s].n+'"><span class="s">'+s+'</span><span class="n">'+EL[s].n+'</span></button>';});
-  h+='<button class="all-btn" type="button" data-cmd="allel">All elements…</button>';
   $('palAtoms').innerHTML=h;
   h='';
   MOL_SHELF.forEach(function(g){h+='<p class="grp">'+g[0]+'</p>';g[1].forEach(function(k){var t=TPL[k];h+='<button class="mol-btn" type="button" data-add="tpl:'+k+'"><b>'+t.name+'</b><span>'+t.sub+'</span></button>';});});
@@ -2402,8 +2421,30 @@ function ghostDrop(x,y){
   if(!onDrop(ids,spec.indexOf('el:')===0?ids[0]:null))select({t:'atom',id:ids[spec.indexOf('tpl:')===0?(TPL[spec.slice(4)].anchor||0):0]});
   commit();
 }
-function openOverlay(){$('elOverlay').classList.add('open');}
-function closeOverlay(){$('elOverlay').classList.remove('open');}
+function openOverlay(){}
+function closeOverlay(){}
+var FSIZES=[420,560,720],FL={x:null,y:null,sz:1,min:false};
+function applyFloat(){
+  var F=$('floatPal');if(!F)return;
+  F.style.setProperty('--fw',FSIZES[FL.sz]+'px');F.classList.toggle('min',FL.min);
+  $('fMin').textContent=FL.min?'+':'–';$('fSize').textContent=FL.sz===2?'Smaller':'Bigger';
+  var r=F.getBoundingClientRect(),w=r.width||FSIZES[FL.sz],hh=r.height||300;
+  if(FL.x==null){FL.x=20;FL.y=Math.max(90,innerHeight-hh-24);}
+  FL.x=clamp(FL.x,80-w,innerWidth-80);FL.y=clamp(FL.y,0,innerHeight-48);
+  F.style.left=FL.x+'px';F.style.top=FL.y+'px';
+}
+function moveFloat(x,y){FL.x=x;FL.y=y;applyFloat();}
+function saveFloat(){try{localStorage.setItem('bondbench-float',JSON.stringify(FL));}catch(e){}}
+function initFloat(){
+  try{var v=JSON.parse(localStorage.getItem('bondbench-float')||'null');if(v)FL=Object.assign(FL,v);}catch(e){}
+  applyFloat();
+  var hd=$('fHead'),FD=null;
+  hd.addEventListener('pointerdown',function(e){if(e.target.closest('button'))return;var r=$('floatPal').getBoundingClientRect();FD={id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};hd.classList.add('drag');try{hd.setPointerCapture(e.pointerId);}catch(x){}e.preventDefault();});
+  hd.addEventListener('pointermove',function(e){if(FD&&FD.id===e.pointerId)moveFloat(e.clientX-FD.dx,e.clientY-FD.dy);});
+  function end(e){if(FD&&FD.id===e.pointerId){FD=null;hd.classList.remove('drag');saveFloat();}}
+  hd.addEventListener('pointerup',end);hd.addEventListener('pointercancel',end);
+  window.addEventListener('resize',applyFloat);
+}
 
 /* ---------- Mode switching ---------- */
 function setMode(m){
@@ -2421,7 +2462,7 @@ var MP_MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/ha
 function mkSlot(i){return {i:i,on:false,x:0,y:0,px:0,py:0,ox:0,oy:0,offT:0,onN:0,offN:0,hist:[],fx:{v:null,d:0,t:0},fy:{v:null,d:0,t:0},pinch:false,seen:0,down:null,cur:null};}
 function setReach(g){HT.gain=g;var v=$('hvid');if(v)v.style.transform='scale('+(-g)+','+g+')';try{localStorage.setItem('bondbench-reach',g);}catch(e){}}
 function histAt(s,t){var h=s.hist,b=h[0]||{x:s.x,y:s.y};for(var i=h.length-1;i>=0;i--)if(h[i].t<=t){b=h[i];break;}return b;}
-var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,gain:1.35,nh:2,vfN:0,sentN:-1,noResize:false,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
+var HT={on:false,busy:false,stream:null,lm:null,raf:0,vf:0,vw:640,vh:480,lastTs:0,sc:null,scx:null,useVideo:false,gain:1.35,nh:2,pool:[],poolLoading:false,lastRes:0,vfN:0,sentN:-1,noResize:false,wk:null,wbusy:false,wsent:0,dg:'',fc:0,ft:0,draf:0,hov:[],gOwner:-1,seenAny:false,rs:false,d:1,slots:[mkSlot(0),mkSlot(1)]};
 var HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 var HAND_COL=['#4D8DFF','#FF9A3C'];
 function hMsg(m,err){var s=$('hstat');$('hmsg').textContent=m||'';s.hidden=!m;$('hdock').classList.toggle('err',!!err);}
@@ -2463,6 +2504,7 @@ async function handStart(){
     if(!HT.lm&&!HT.wk){
       hMsg('Loading hand tracking…');
       HT.wk=await initWorker();
+      if(HT.wk)HT.pool=[{w:HT.wk,busy:false,sent:0}];
     }
     if(!HT.lm&&!HT.wk){
       var vision;
@@ -2475,7 +2517,7 @@ async function handStart(){
     if(!HT.stream){HT.busy=false;return;}
     if(!HT.sc)HT.sc=document.createElement('canvas');
     if(!HT.rs){HT.rs=true;window.addEventListener('resize',function(){if(HT.on)resizeFull();});}
-    resizeFull();HT.on=true;HT.seenAny=false;HT.useVideo=false;HT.wbusy=false;HT.fc=0;HT.ft=performance.now();
+    resizeFull();HT.on=true;HT.seenAny=false;HT.useVideo=false;HT.lastRes=0;HT.pool.forEach(function(q){q.busy=false;});ensurePool();HT.fc=0;HT.ft=performance.now();
     HT.slots.forEach(function(s){s.dx=null;});HT.draf=requestAnimationFrame(hDisp);
     hMsg('Use one or two hands. Pinch your thumb and finger to grab or tap, then open them to let go. Pinch with both hands on the bench to zoom.');
     hSchedule();
@@ -2498,7 +2540,7 @@ function handStop(keep){
   HT.on=false;
   var v=$('hvid');
   if(v){try{if(v.cancelVideoFrameCallback&&HT.vf)v.cancelVideoFrameCallback(HT.vf);}catch(e){}v.srcObject=null;}
-  cancelAnimationFrame(HT.raf);cancelAnimationFrame(HT.draf);HT.vf=0;HT.wbusy=false;
+  cancelAnimationFrame(HT.raf);cancelAnimationFrame(HT.draf);HT.vf=0;HT.pool.forEach(function(q){q.busy=false;});
   HT.slots.forEach(function(s){if(s.cur)hRelease(s);s.fx.v=null;s.fy.v=null;});
   if(HT.stream){HT.stream.getTracks().forEach(function(t){t.stop();});HT.stream=null;}
   HT.hov.forEach(function(e){e.classList.remove('hand-hover');});HT.hov=[];
@@ -2513,7 +2555,7 @@ var WK_SRC="let lm=null;self.onmessage=async function(e){var m=e.data;"+
  "var o=function(dg){return {baseOptions:{modelAssetPath:m.model,delegate:dg},runningMode:'VIDEO',numHands:m.n,minHandDetectionConfidence:0.4,minHandPresenceConfidence:0.3,minTrackingConfidence:0.3};};"+
  "var dg='GPU';try{lm=await vision.HandLandmarker.createFromOptions(fs,o('GPU'));}catch(x){dg='CPU';lm=await vision.HandLandmarker.createFromOptions(fs,o('CPU'));}"+
  "self.postMessage({t:'ready',dg:dg});}catch(err){self.postMessage({t:'fail',msg:String(err&&err.message||err)});}}"+
- "else if(m.t==='frame'){var r=null;try{r=lm.detectForVideo(m.img,m.ts);}catch(x){}try{m.img.close();}catch(x){}self.postMessage({t:'res',lm:r&&r.landmarks?r.landmarks:[]});}"+
+ "else if(m.t==='frame'){var r=null;try{r=lm.detectForVideo(m.img,m.ts);}catch(x){}try{m.img.close();}catch(x){}self.postMessage({t:'res',ts:m.ts,lm:r&&r.landmarks?r.landmarks:[]});}"+
  "else if(m.t==='opts'){try{await lm.setOptions({numHands:m.n});}catch(x){}}};";
 /* Hand tracking runs in a background worker when the browser allows it, so the app stays smooth */
 function initWorker(){
@@ -2524,7 +2566,7 @@ function initWorker(){
     function fin(x){if(done)return;done=true;clearTimeout(to);if(!x){try{w.terminate();}catch(e){}}res(x);}
     w.onmessage=function(e){var m=e.data;
       if(m.t==='ready'){if(m.dg!=='GPU'){fin(null);return;}
-        w.onmessage=function(ev){var r=ev.data;if(r.t!=='res')return;HT.wbusy=false;if(!HT.on)return;hSend();hCount();hProcess({landmarks:r.lm},performance.now());};
+        w.onmessage=function(ev){var r=ev.data;if(r.t!=='res')return;var rec=HT.pool.filter(function(q){return q.w===w;})[0];if(rec)rec.busy=false;if(!HT.on)return;hSend();if(r.ts<=HT.lastRes)return;HT.lastRes=r.ts;hCount();hProcess({landmarks:r.lm},performance.now());};
         HT.dg='GPU';
         fin(w);}
       else if(m.t==='fail')fin(null);};
@@ -2534,7 +2576,7 @@ function initWorker(){
 }
 function hCount(){
   HT.fc++;var t=performance.now();
-  if(t-HT.ft>=1000){var f=$('hfps');if(f)f.textContent=Math.round(HT.fc*1000/(t-HT.ft))+' fps · '+(HT.wk?'bg ':'')+(HT.dg||'');HT.fc=0;HT.ft=t;}
+  if(t-HT.ft>=1000){var f=$('hfps');if(f)f.textContent=Math.round(HT.fc*1000/(t-HT.ft))+' fps · '+(HT.wk?'bg'+(HT.nh===2&&HT.pool.length>1?'×2 ':' '):'')+(HT.dg||'');HT.fc=0;HT.ft=t;}
 }
 /* Cursor glides at screen rate between tracking updates */
 function hDisp(){
@@ -2555,7 +2597,6 @@ function hFrame(){
     var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;
     if(HT.wk){
       HT.vfN++;
-      if(HT.wbusy&&ts-HT.wsent>2000)HT.wbusy=false;
       hSend();
     }else{
       var src=v;
@@ -2576,20 +2617,29 @@ function hFrame(){
 }
 function hSend(){
   var v=$('hvid');
-  if(!HT.on||!HT.wk||HT.wbusy||HT.vfN===HT.sentN||v.readyState<2||!v.videoWidth)return;
-  var ts=performance.now();if(ts<=HT.lastTs)ts=HT.lastTs+1;HT.lastTs=ts;
-  HT.wbusy=true;HT.wsent=ts;HT.sentN=HT.vfN;
+  if(!HT.on||!HT.wk||HT.vfN===HT.sentN||v.readyState<2||!v.videoWidth)return;
+  var now=performance.now(),n=HT.nh===2?HT.pool.length:1,rec=null;
+  for(var i=0;i<n;i++){var q=HT.pool[i];if(q.busy&&now-q.sent>2000)q.busy=false;if(!q.busy){rec=q;break;}}
+  if(!rec)return;
+  var ts=now;if(ts<=HT.lastTs)ts=HT.lastTs+1;HT.lastTs=ts;
+  rec.busy=true;rec.sent=now;HT.sentN=HT.vfN;
   var rw=480,rh=Math.max(1,Math.round(rw*v.videoHeight/v.videoWidth));
   var p=HT.noResize?createImageBitmap(v):createImageBitmap(v,{resizeWidth:rw,resizeHeight:rh,resizeQuality:'low'});
   p.then(function(bm){
-    if(!HT.on||!HT.wk){try{bm.close();}catch(e){}HT.wbusy=false;return;}
-    HT.wk.postMessage({t:'frame',img:bm,ts:ts},[bm]);
-  },function(){if(!HT.noResize)HT.noResize=true;HT.wbusy=false;});
+    if(!HT.on||!HT.wk){try{bm.close();}catch(e){}rec.busy=false;return;}
+    rec.w.postMessage({t:'frame',img:bm,ts:ts},[bm]);
+  },function(){if(!HT.noResize)HT.noResize=true;rec.busy=false;});
+}
+/* With two hands, a second tracker takes every other camera frame */
+function ensurePool(){
+  if(HT.nh!==2||!HT.wk||HT.pool.length>1||HT.poolLoading)return;
+  HT.poolLoading=true;
+  initWorker().then(function(w){HT.poolLoading=false;if(w){HT.pool.push({w:w,busy:false,sent:0});}});
 }
 function setHands(n){
   HT.nh=n;try{localStorage.setItem('bondbench-hands',n);}catch(e){}
   var b=$('hHands');if(b)b.textContent=n===2?'2 hands':'1 hand';
-  if(HT.wk)HT.wk.postMessage({t:'opts',n:n});else if(HT.lm&&HT.lm.setOptions){try{HT.lm.setOptions({numHands:n});}catch(e){}}
+  if(HT.wk){HT.pool.forEach(function(q){q.w.postMessage({t:'opts',n:n});});ensurePool();}else if(HT.lm&&HT.lm.setOptions){try{HT.lm.setOptions({numHands:n});}catch(e){}}
   if(n===1&&HT.slots[1].on)hRelease(HT.slots[1]);
 }
 function hAssign(dets){
@@ -2693,6 +2743,7 @@ function hRelease(s){
 function hDown(s){
   var x=s.px,y=s.py,id='hand'+s.i,el=document.elementFromPoint(x,y);s.down=null;if(!el)return;
   if(el===cv){s.down={t:'cv'};cDown(x,y,id);return;}
+  if(el.closest&&el.closest('#fHead')&&!el.closest('button')){var fr=$('floatPal').getBoundingClientRect();s.down={t:'float',dx:x-fr.left,dy:y-fr.top};$('fHead').classList.add('drag');return;}
   var add=el.closest&&el.closest('[data-add]');
   if(add&&!add.closest('.overlay')){s.down={t:'pal',el:add,x0:x,y0:y,drag:false,blocked:false};add.classList.add('hand-press');return;}
   var btn=el.closest&&el.closest('button');
@@ -2701,6 +2752,7 @@ function hDown(s){
 function hMove(s){
   var d=s.down;if(!d)return;
   if(d.t==='cv')cMove(s.px,s.py,'hand'+s.i);
+  else if(d.t==='float')moveFloat(s.px-d.dx,s.py-d.dy);
   else if(d.t==='pal'){
     if(!d.drag&&!d.blocked&&Math.hypot(s.px-d.x0,s.py-d.y0)>14){
       d.el.classList.remove('hand-press');
@@ -2714,6 +2766,7 @@ function hUp(s){
   var d=s.down;s.down=null;if(!d)return;
   var x=s.px,y=s.py;
   if(d.t==='cv'){cUp(x,y,'hand'+s.i);return;}
+  if(d.t==='float'){$('fHead').classList.remove('drag');saveFloat();return;}
   d.el.classList.remove('hand-press');
   if(d.t==='pal'){if(d.blocked)return;if(d.drag){HT.gOwner=-1;ghostDrop(x,y);}else d.el.click();return;}
   var el=document.elementFromPoint(x,y);if(el&&d.el.contains(el))d.el.click();
@@ -2749,7 +2802,9 @@ function initBuild(){
     else if(k==='hand'){if(HT.on||HT.busy)handStop();else handStart();}
     else if(k==='hclose')handStop();
     else if(k==='hands')setHands(HT.nh===2?1:2);
-    else if(k==='shelf'){var at=c.dataset.shelf==='atoms';$('palAtoms').hidden=!at;$('palMols').hidden=at;document.querySelectorAll('.seg button').forEach(function(b){b.setAttribute('aria-selected',b===c);});}
+    else if(k==='shelf'){var sh=c.dataset.shelf;$('palTable').hidden=sh!=='table';$('palAtoms').hidden=sh!=='atoms';$('palMols').hidden=sh!=='mols';document.querySelectorAll('.float .seg button').forEach(function(b){b.setAttribute('aria-selected',b===c);});applyFloat();}
+    else if(k==='fmin'){FL.min=!FL.min;applyFloat();saveFloat();}
+    else if(k==='fsize'){FL.sz=FL.sz===2?1:FL.sz+1;applyFloat();saveFloat();}
     else if(k==='allel')openOverlay();
     else if(k==='ovclose')closeOverlay();
     else if(k==='undo')undo();
@@ -2764,7 +2819,7 @@ function initBuild(){
     else if(k==='hydro'){if(SEL&&SEL.t==='bond'){pushUndo();var b2=S.bonds[SEL.id],nm=linkName(b2),keep2=b2.oh||b2.a;hydrolyse(SEL.id);select({t:'atom',id:keep2});commit();toast(b2.link==='disulfide'?'The bridge broke and each sulfur got a hydrogen back.':'Hydrolysis: water split the '+nm+'.');}}
     else if(k==='delmol'){if(SELMOL){pushUndo();SELMOL.forEach(removeAtom);SEL=null;commit();}}
   });
-  $('elOverlay').addEventListener('click',function(e){if(e.target===$('elOverlay'))closeOverlay();});
+  initFloat();
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape')closeOverlay();
     if($('buildView').hidden||/INPUT|TEXTAREA/.test((e.target&&e.target.tagName)||''))return;
