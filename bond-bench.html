@@ -249,6 +249,27 @@ body.full.mode-build .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .ftable .pt{gap:2px}
 .ftable .el{cursor:grab;touch-action:pan-y}
 @media (max-width:600px){.float{max-width:94vw}}
+.pcbox a,.omoa a{color:var(--sel,#2F6BFF);font-weight:600}
+.pcdesc{font-size:14px;line-height:1.45}
+.orgbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.orgbtns .btn{min-height:42px;font-size:14px;padding:0 12px}
+.ov-panel.org{width:min(680px,100%);display:flex;flex-direction:column;gap:12px}
+.otabs{display:flex;flex-wrap:wrap;gap:6px}
+.otab{appearance:none;border:1.5px solid var(--line);background:var(--inset);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font:600 14px/1 var(--body);cursor:pointer}
+.otab[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.ohead{margin:0;font-size:15px}
+.ostep{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;background:var(--inset);border-radius:14px;padding:16px;min-height:150px}
+.ostep h3{font-family:var(--display);font-size:20px;margin:2px 0 6px}
+.ostep p{margin:0;font-size:15.5px;line-height:1.5}
+.oico{font-size:52px;line-height:1;text-align:center}
+.onum{font-size:12.5px!important;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}
+.odots{display:flex;gap:6px;justify-content:center}
+.odots span{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.odots span.on{background:var(--ink)}
+.omoa:empty{display:none}
+.omoa{border-top:1px solid var(--line);padding-top:10px}
+.omoa h3{font-size:16px;margin:0 0 6px}
+.omoa p{font-size:14px;margin:0 0 6px}
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(8,16,22,.5);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .overlay.open{display:flex}
 .ov-panel{width:min(1100px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:18px;padding:14px}
@@ -294,7 +315,7 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 <body class="mode-build">
 <div class="shell">
 <header class="top">
-  <p class="brand">Bond Bench <span class="ver">v9 · 1 Oct</span></p>
+  <p class="brand">Bond Bench <span class="ver">v10 · 2 Oct</span></p>
   <div class="tabs" role="tablist" aria-label="Mode">
     <button class="tab" type="button" role="tab" id="tab-build" data-cmd="mode" data-mode="build" aria-selected="true">Build</button>
     <button class="tab" type="button" role="tab" id="tab-pair" data-cmd="mode" data-mode="pair" aria-selected="false">Pair up</button>
@@ -358,6 +379,13 @@ body.hand-on .overlay{background:rgba(8,16,22,.12)}
 </main>
 </div>
 
+<div class="overlay" id="orgOv" role="dialog" aria-modal="true" aria-labelledby="orgTitle">
+  <div class="ov-panel org">
+    <div class="ov-head"><h2 id="orgTitle">Organism lab</h2><button class="btn ghost" type="button" data-cmd="orgclose">Close</button></div>
+    <div class="otabs" id="orgTabs"></div>
+    <div id="orgBody"></div>
+  </div>
+</div>
 <div id="ghost" aria-hidden="true"></div>
 <video id="hvid" playsinline muted></video>
 <canvas id="hfull" aria-hidden="true"></canvas>
@@ -1161,7 +1189,8 @@ function fattyAcid(){
   return T('fatty','Fatty acid','FA',at,bd,{sub:'Hexanoic acid'});
 }
 /* Nucleotides: heavy atoms only (hydrogens are added on spawn). Phosphate + pentose + base. */
-function nuc(base,rna){
+function nuc(base,rna,np){
+  np=np||1;
   var A=[],Bd=[];
   function at(e,x,y,tag){A.push([e,x,y,tag||'']);return A.length-1;}
   function bd(i,j,o){Bd.push([i,j,o||1]);}
@@ -1176,7 +1205,12 @@ function nuc(base,rna){
   var C5=at('C',-1.409,-1.063,'C5p');bd(C4,C5);
   var O5=at('O',-1.909,-1.929,'O5p');bd(C5,O5);
   var P=at('P',-2.909,-1.929,'P');bd(O5,P);
-  bd(P,at('O',-2.909,-2.929),2);bd(P,at('O',-3.909,-1.929));bd(P,at('O',-2.909,-0.929));
+  var Pc=P,px=-2.909;
+  for(var k=1;k<=np;k++){
+    bd(Pc,at('O',px,-2.929),2);bd(Pc,at('O',px,-0.929));
+    if(k<np){var Ob=at('O',px-1,-1.929,'OB');bd(Pc,Ob);var P2=at('P',px-2,-1.929,'P'+k);bd(Ob,P2);Pc=P2;px-=2;}
+    else bd(Pc,at('O',px-1,-1.929));
+  }
   bd(C3,at('O',-1.0,1.554,'O3p'));
   if(rna)bd(C2,at('O',1.0,1.554,'O2p'));
   var th=-18*Math.PI/180,cs=Math.cos(th),sn=Math.sin(th),N0=[A[C1][1]+cs,A[C1][2]+sn];
@@ -1196,7 +1230,36 @@ function nuc(base,rna){
     else{bd(C4p,C5p,2);bd(C5p,C6p);bd(C6p,N1p);bd(N1p,C2p);bd(C2p,N3p,2);bd(N3p,C4p);bd(C6p,put('O',3.233,0.860),2);bd(C2p,put('N',0.915,3.434));}
   }
   var BN={A:'Adenine',T:'Thymine',G:'Guanine',C:'Cytosine',U:'Uracil'}[base];
-  return T('nuc',BN+' ('+base+')',base,A,Bd,{autoH:true,anchor:1,rna:!!rna,base:BN,purine:purine,sub:(rna?'RNA':'DNA')+' nucleotide'});
+  if(np>1){var tp=np===3;return T('atp',tp?'ATP':'ADP',tp?'ATP':'ADP',A,Bd,{autoH:true,anchor:1,rna:true,base:BN,purine:true,mk:tp?'atp':'adp',
+    sub:tp?'Adenosine triphosphate':'Adenosine diphosphate',pc:tp?'adenosine triphosphate':'adenosine diphosphate',pill:'Energy carrier',
+    info:tp?['ATP is a nucleotide: adenine, ribose and three phosphate groups.','ATP hydrolase hydrolyses the bond to the last phosphate, giving ADP and inorganic phosphate (Pᵢ) and releasing energy in small, manageable amounts. That makes ATP the immediate energy source in cells.','It can’t be stored in large amounts, so cells remake it constantly from ADP and Pᵢ by condensation, using ATP synthase.']
+      :['ADP is what’s left when ATP loses a phosphate: adenine, ribose and two phosphate groups.','ATP synthase joins ADP and inorganic phosphate back into ATP by condensation, in respiration and photosynthesis.']});}
+  return T('nuc',BN+' ('+base+')',base,A,Bd,{autoH:true,anchor:1,rna:!!rna,base:BN,purine:purine,sub:(rna?'RNA':'DNA')+' nucleotide',
+    pc:(rna?{A:'AMP',U:'UMP',G:'GMP',C:'CMP'}:{A:'dAMP',T:'dTMP',G:'dGMP',C:'dCMP'})[base]});
+}
+/* Clozapine: two benzene rings fused to a seven-membered diazepine ring, plus a methylpiperazine */
+function clozapine(){
+  var A=[],Bd=[];function at(e,x,y){A.push([e,x,y,'']);return A.length-1;}function bd(i,j,o){Bd.push([i,j,o||1]);}
+  var R7=1/(2*Math.sin(Math.PI/7)),P=[],i;
+  for(i=0;i<7;i++){var a=-Math.PI/2+i*2*Math.PI/7;P.push([R7*Math.cos(a),R7*Math.sin(a)]);}
+  function fuse6(p,q){var mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,nl=Math.hypot(mx,my),hc=[mx+mx/nl*0.866,my+my/nl*0.866];
+    var aq=Math.atan2(q[1]-hc[1],q[0]-hc[0]),ap=Math.atan2(p[1]-hc[1],p[0]-hc[0]),d=angDiff(aq,ap)>0?1:-1,o=[];
+    for(var k=1;k<=4;k++){var t=aq+k*Math.PI/3*d;o.push([hc[0]+Math.cos(t),hc[1]+Math.sin(t)]);}return {v:o,c:hc};}
+  var C11=at('C',P[0][0],P[0][1]),N10=at('N',P[1][0],P[1][1]),A1=at('C',P[2][0],P[2][1]),A2=at('C',P[3][0],P[3][1]),N5=at('N',P[4][0],P[4][1]),B1=at('C',P[5][0],P[5][1]),B6=at('C',P[6][0],P[6][1]);
+  bd(C11,N10,2);bd(N10,A1);bd(A1,A2,2);bd(A2,N5);bd(N5,B1);bd(B1,B6);bd(B6,C11);
+  var fa=fuse6(P[2],P[3]),A3=at('C',fa.v[0][0],fa.v[0][1]),A4=at('C',fa.v[1][0],fa.v[1][1]),A5=at('C',fa.v[2][0],fa.v[2][1]),A6=at('C',fa.v[3][0],fa.v[3][1]);
+  bd(A2,A3);bd(A3,A4,2);bd(A4,A5);bd(A5,A6,2);bd(A6,A1);
+  bd(A5,at('Cl',2*fa.v[2][0]-fa.c[0],2*fa.v[2][1]-fa.c[1]));
+  var fb=fuse6(P[6],P[5]),B2=at('C',fb.v[0][0],fb.v[0][1]),B3=at('C',fb.v[1][0],fb.v[1][1]),B4=at('C',fb.v[2][0],fb.v[2][1]),B5=at('C',fb.v[3][0],fb.v[3][1]);
+  bd(B1,B2,2);bd(B2,B3);bd(B3,B4,2);bd(B4,B5);bd(B5,B6,2);
+  var y0=P[0][1],Np=at('N',0,y0-1),cy=y0-2,q=[];
+  [30,-30,-90,-150,150].forEach(function(d){var r=d*Math.PI/180;q.push(at(d===-90?'N':'C',Math.cos(r),cy+Math.sin(r)));});
+  bd(C11,Np);bd(Np,q[0]);bd(q[0],q[1]);bd(q[1],q[2]);bd(q[2],q[3]);bd(q[3],q[4]);bd(q[4],Np);
+  bd(q[2],at('C',0,cy-2));
+  return T('drug','Clozapine','Clozapine',A,Bd,{autoH:true,anchor:0,mk:'cloz',sub:'Antipsychotic medicine',pc:'clozapine',pill:'Medicine',
+    info:['Clozapine (C₁₈H₁₉ClN₄) is an “atypical” antipsychotic medicine, used for schizophrenia that hasn’t improved with other treatments.',
+      'Its shape, two benzene rings fused either side of a seven-membered ring with two nitrogens, plus a methylpiperazine ring, lets it fit into several different receptors in the brain.',
+      'Open the Organism lab below to see how it works in the body.']});
 }
 var ETH_H=[['H',-0.35,0.606],['H',-0.35,-0.606]];
 var TPL={
@@ -1214,11 +1277,13 @@ var TPL={
   propene:T('alkene','Propene','Propene',[['C',0,0],['C',1,0]].concat(ETH_H,[['H',1.35,-0.606],['C',1.5,0.866],['H',2.2,0.866],['H',1.85,1.472],['H',1.15,1.472]]),[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1],[5,6,1],[5,7,1],[5,8,1]],{sub:'Makes poly(propene)',poly:'Poly(propene)',use:'Poly(propene) is used for ropes, crates and food tubs.'}),
   chloro:T('alkene','Chloroethene','Chloroethene',[['C',0,0],['C',1,0]].concat(ETH_H,[['H',1.35,-0.606],['Cl',1.5,0.866]]),[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{sub:'Makes PVC',poly:'Poly(chloroethene), PVC',use:'PVC is used for water pipes, window frames and cable insulation.'}),
   tfe:T('alkene','Tetrafluoroethene','TFE',[['C',0,0],['C',1,0],['F',-0.5,0.866],['F',-0.5,-0.866],['F',1.5,0.866],['F',1.5,-0.866]],[[0,1,2],[0,2,1],[0,3,1],[1,4,1],[1,5,1]],{sub:'Makes PTFE',poly:'Poly(tetrafluoroethene), PTFE',use:'PTFE (Teflon) is the slippery coating on non-stick pans.'}),
+  atp:nuc('A',1,3),adp:nuc('A',1,2),cloz:clozapine(),
   dA:nuc('A'),dT:nuc('T'),dG:nuc('G'),dC:nuc('C'),rA:nuc('A',1),rU:nuc('U',1),rG:nuc('G',1),rC:nuc('C',1),
   water:T('water','Water','Water',[['O',0,0],['H',-0.606,0.35],['H',0.606,0.35]],[[0,1,1],[0,2,1]],{sub:'For hydrolysis'})
 };
 var ATOM_SHELF=['H','C','N','O','F','Cl','Br','I','S','P','B','Si','Li','Na','K','Mg','Ca','Al'];
-var MOL_SHELF=[['Amino acids',['gly','ala','ser','cys','val']],['Sugars',['aglc','bglc']],['Lipids',['glycerol','fa']],['DNA nucleotides',['dA','dT','dG','dC']],['RNA nucleotides',['rA','rU','rG','rC']],['Alkenes',['ethene','propene','chloro','tfe']],['Other',['water']]];
+TPL.aglc.pc='alpha-D-glucose';TPL.bglc.pc='beta-D-glucose';TPL.fa.pc='hexanoic acid';TPL.tfe.pc='tetrafluoroethylene';TPL.chloro.pc='vinyl chloride';
+var MOL_SHELF=[['Amino acids',['gly','ala','ser','cys','val']],['Sugars',['aglc','bglc']],['Lipids',['glycerol','fa']],['DNA nucleotides',['dA','dT','dG','dC']],['Energy',['atp','adp']],['Medicines',['cloz']],['RNA nucleotides',['rA','rU','rG','rC']],['Alkenes',['ethene','propene','chloro','tfe']],['Other',['water']]];
 
 function tplCentre(t){var x=0,y=0;t.atoms.forEach(function(a){x+=a[1];y+=a[2];});return [x/t.atoms.length,y/t.atoms.length];}
 function tplOffsets(key){var t=TPL[key],c=tplCentre(t);return t.atoms.map(function(a){return [(a[1]-c[0])*BL,(a[2]-c[1])*BL];});}
@@ -1638,6 +1703,7 @@ function analyse(M){
 function nameUnits(R){
   var K=R.kinds,ks=Object.keys(K),L=R.links,one=R.uids.length===1?TPL[R.units[R.uids[0]].k]:null,ex=[];
   R.explain=ex;
+  if(one&&!L.length&&one.info){R.name=one.name;R.pill=one.pill||'';R.sub=one.sub;one.info.forEach(function(x){ex.push(x);});return;}
   if(ks.length===1&&ks[0]==='aa'){
     var n=K.aa,seq=seqOf(R.M),ok=L.every(function(b){return b.link==='peptide'||b.link==='disulfide';});
     if(n===1){R.name=one.name;R.pill='Amino acid';
@@ -1736,6 +1802,244 @@ function nameUnits(R){
   if(R.water)ex.push('It was joined by condensation reactions that released '+R.water+' water molecule'+(R.water>1?'s':'')+'.');
 }
 
+
+
+/* ---------- SMILES (for looking molecules up) ---------- */
+var NVAL={B:[3],C:[4],N:[3,5],O:[2],P:[3,5],S:[2,4,6],F:[1],Cl:[1],Br:[1],I:[1]};
+function toSmiles(M){
+  var heavy=M.filter(function(i){return el(i)!=='H';});
+  if(!heavy.length)return M.length===2?'[H][H]':null;
+  if(M.some(function(i){return nb(i).some(function(e){var k=bondKind(e.b);return k==='ionic'||k==='metallic';});}))return null;
+  var inM={};heavy.forEach(function(i){inM[i]=1;});
+  function hn(u){return nb(u).filter(function(e){return inM[e.n];});}
+  function key(a,b){return a<b?a+'-'+b:b+'-'+a;}
+  var seen={},done={},ringAt={},clos={},nr=0;
+  function d1(u,p){seen[u]=1;hn(u).forEach(function(e){if(e.n===p)return;if(!seen[e.n])d1(e.n,u);else{var k=key(u,e.n);if(!done[k]){done[k]=1;clos[k]=1;nr++;(ringAt[u]=ringAt[u]||[]).push([nr,e.b.o]);(ringAt[e.n]=ringAt[e.n]||[]).push([nr,1]);}}});}
+  function sym(u){
+    var e=el(u),hc=0,sh=0;nb(u).forEach(function(x){if(el(x.n)==='H')hc++;else sh+=x.b.o;});
+    var nv=NVAL[e];
+    if(nv){var v=null;for(var i=0;i<nv.length;i++)if(nv[i]>=sh){v=nv[i];break;}if(v!=null&&v-sh===hc)return e;}
+    return '['+e+(hc?'H'+(hc>1?hc:''):'')+']';
+  }
+  var seen2={};
+  function wr(u,p,pb){
+    seen2[u]=1;var s=(pb===2?'=':pb===3?'#':'')+sym(u);
+    (ringAt[u]||[]).forEach(function(r){s+=(r[1]===2?'=':r[1]===3?'#':'')+(r[0]<10?r[0]:'%'+r[0]);});
+    var ch=hn(u).filter(function(e){return e.n!==p&&!clos[key(u,e.n)]&&!seen2[e.n];});
+    ch.forEach(function(e,i){var t=wr(e.n,u,e.b.o);s+=i<ch.length-1?'('+t+')':t;});
+    return s;
+  }
+  var parts=[];
+  heavy.forEach(function(h){if(!seen[h]){d1(h,null);parts.push(wr(h,null,1));}});
+  return parts.join('.');
+}
+
+/* ---------- PubChem (U.S. National Library of Medicine) ---------- */
+var PCB='https://pubchem.ncbi.nlm.nih.gov',PCC={},PCTOK=0;
+function escH(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function excerpt(t,n){t=String(t||'').replace(/\s+/g,' ').trim();if(t.length<=n)return t;var c=t.slice(0,n),k=c.lastIndexOf('. ');return (k>n*0.45?c.slice(0,k+1):c.replace(/\s+\S*$/,'')+'…');}
+function pcQuery(R){
+  if(R.spare)return null;
+  if(R.intact&&R.uids.length===1){var t=TPL[R.units[R.uids[0]].k];return {name:t.pc||t.name};}
+  if(R.entry&&R.name)return {name:R.name};
+  var sm=toSmiles(R.M);return sm?{smiles:sm}:null;
+}
+function pcJSON(url,opt){return fetch(url,opt).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();});}
+function pcLookup(q){
+  var k=q.name?'n:'+q.name.toLowerCase():'s:'+q.smiles;
+  if(PCC[k])return PCC[k];
+  var cidP=q.name?pcJSON(PCB+'/rest/pug/compound/name/'+encodeURIComponent(q.name)+'/cids/JSON')
+    :pcJSON(PCB+'/rest/pug/compound/smiles/cids/JSON',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'smiles='+encodeURIComponent(q.smiles)});
+  PCC[k]=cidP.then(function(j){
+    var cid=j&&j.IdentifierList&&j.IdentifierList.CID&&j.IdentifierList.CID[0];if(!cid)throw new Error('none');
+    return Promise.all([
+      pcJSON(PCB+'/rest/pug/compound/cid/'+cid+'/property/Title,IUPACName,MolecularFormula,MolecularWeight/JSON').catch(function(){return null;}),
+      pcJSON(PCB+'/rest/pug/compound/cid/'+cid+'/description/JSON').catch(function(){return null;})
+    ]).then(function(r){
+      var pr=r[0]&&r[0].PropertyTable&&r[0].PropertyTable.Properties[0]||{},ds=null;
+      ((r[1]&&r[1].InformationList&&r[1].InformationList.Information)||[]).some(function(x){if(x.Description){ds=x;return true;}return false;});
+      return {cid:cid,title:pr.Title,iupac:pr.IUPACName,formula:pr.MolecularFormula,mw:pr.MolecularWeight,desc:ds&&ds.Description,src:ds&&ds.DescriptionSourceName};
+    });
+  });
+  PCC[k].catch(function(){delete PCC[k];});
+  return PCC[k];
+}
+function pcMoA(cid){
+  var k='m:'+cid;if(PCC[k])return PCC[k];
+  PCC[k]=pcJSON(PCB+'/rest/pug_view/data/compound/'+cid+'/JSON?heading=Mechanism+of+Action').then(function(j){
+    var rec=j&&j.Record,refs={},found=null;
+    ((rec&&rec.Reference)||[]).forEach(function(r){refs[r.ReferenceNumber]=r.SourceName;});
+    (function walk(o){if(found||!o||typeof o!=='object')return;
+      if(o.Value&&o.Value.StringWithMarkup&&o.Value.StringWithMarkup.length){found={t:o.Value.StringWithMarkup.map(function(x){return x.String;}).join(' '),src:refs[o.ReferenceNumber]||''};return;}
+      for(var kk in o)walk(o[kk]);})(rec);
+    return found;
+  }).catch(function(){return null;});
+  return PCC[k];
+}
+function pcFill(){
+  var box=document.getElementById('pcBox');if(!box)return;
+  var tok=++PCTOK,q=box.dataset.q?JSON.parse(box.dataset.q):null,fq=box.dataset.f;
+  var search='<a href="'+PCB+'/#query='+encodeURIComponent(fq)+'" target="_blank" rel="noopener">Search PubChem for '+escH(fq)+' ↗</a>';
+  if(!q){box.innerHTML='<h3>PubChem</h3><p class="muted">Fill the spare bonds (Add H) to look this molecule up. Or '+search+'</p>';return;}
+  if(!window.fetch){box.innerHTML='<h3>PubChem</h3><p>'+search+'</p>';return;}
+  pcLookup(q).then(function(d){
+    if(tok!==PCTOK||!document.body.contains(box))return;
+    ORGS.cid=d.cid;
+    var h='<h3>PubChem <span class="muted">· National Library of Medicine</span></h3><ul class="blist">';
+    if(d.title)h+='<li><span>Name</span><span class="k">'+escH(d.title)+'</span></li>';
+    if(d.iupac)h+='<li><span>IUPAC name</span><span class="k">'+escH(excerpt(d.iupac,90))+'</span></li>';
+    if(d.mw)h+='<li><span>Molar mass</span><span class="k">'+escH(d.mw)+' g mol⁻¹</span></li>';
+    h+='</ul>';
+    if(d.desc)h+='<p class="pcdesc">'+escH(excerpt(d.desc,280))+(d.src?' <span class="muted">('+escH(d.src)+')</span>':'')+'</p>';
+    h+='<p><a class="pclink" href="'+PCB+'/compound/'+d.cid+'" target="_blank" rel="noopener">Open in PubChem ↗</a></p>';
+    box.innerHTML=h;
+  },function(){
+    if(tok!==PCTOK||!document.body.contains(box))return;
+    box.innerHTML='<h3>PubChem</h3><p class="muted">No exact match found (or you’re offline). '+search+'</p>';
+  });
+}
+
+/* ---------- Organism lab ---------- */
+var ORGL={human:'🧍 Human',bact:'🦠 Bacterium (E. coli)',yeast:'🍞 Yeast',plant:'🌿 Plant'};
+var ORGS={key:null,org:'human',step:0,name:'',formula:'',cid:null,beta:false};
+var MOA={
+glucose:{
+ human:[['🍽️','Getting in','In the small intestine (ileum), glucose is absorbed into epithelial cells by co-transport with sodium ions, then moves into the blood by facilitated diffusion.'],['🩸','Where it goes','Blood carries it to every cell. It enters cells by facilitated diffusion through GLUT carrier proteins; insulin makes muscle and fat cells put more carriers into their membranes.'],['⚡','What it does','It’s the main respiratory substrate. Glycolysis in the cytoplasm splits it into two pyruvate (net 2 ATP); with oxygen, the link reaction, Krebs cycle and oxidative phosphorylation in mitochondria make many more ATP.'],['⚖️','Keeping levels steady','After a meal, insulin from the pancreas makes the liver and muscles store glucose as glycogen (glycogenesis). Between meals, glucagon triggers glycogenolysis and gluconeogenesis to release glucose again.']],
+ bact:[['🚪','Getting in','E. coli takes glucose in with a phosphotransferase system, which adds a phosphate to it as it crosses the cell membrane.'],['⚡','What it does','Glycolysis happens in the cytoplasm. With oxygen it respires aerobically using an electron transport chain in its cell membrane (bacteria have no mitochondria); without oxygen it ferments glucose into a mix of acids and ethanol.'],['🧬','Gene control','While glucose is available, E. coli keeps the genes for using other sugars, like the lac operon for lactose, mostly switched off.']],
+ yeast:[['🚪','Getting in','Glucose enters by facilitated diffusion through hexose transporter proteins.'],['⚡','With oxygen','Glycolysis, then the link reaction, Krebs cycle and oxidative phosphorylation in mitochondria, giving lots of ATP.'],['🍞','Without oxygen','Alcoholic fermentation: pyruvate loses CO₂ to become ethanal, which is reduced to ethanol. That regenerates NAD so glycolysis can keep going, but gives only 2 ATP per glucose.'],['🍺','Bread and beer','The CO₂ makes bread rise and the ethanol makes beer and wine. With plenty of sugar, yeast ferments even when there is oxygen.']],
+ plant:[['☀️','Made','Glucose is made in chloroplasts by photosynthesis. In the Calvin cycle, rubisco fixes CO₂ with RuBP, and the product is reduced to triose phosphate using ATP and reduced NADP.'],['🚚','Transport','It’s converted into sucrose, which is carried around the plant in the phloem by mass flow.'],['🫙','Storage and use','It’s stored as insoluble starch, respired for ATP, and β-glucose is used to make cellulose for cell walls.']]},
+carbs:{
+ human:[['🍽️','Digestion','Amylase (from the salivary glands and pancreas) hydrolyses starch into maltose. Maltase, a membrane-bound enzyme on the small intestine’s epithelium, hydrolyses maltose into α-glucose.'],['🩸','Absorption','The glucose is absorbed by co-transport with sodium ions and carried away in the blood.'],['🫀','Storage','In the liver and muscles, glucose is joined back into glycogen: a very branched polymer of α-glucose (α-1,4 and α-1,6 bonds) that can be broken down quickly.']],
+ bact:[['🚪','Getting in','E. coli has a transport system for maltose and short starch fragments; enzymes inside then break them into glucose.'],['⚡','Used','The glucose goes into glycolysis and respiration.']],
+ yeast:[['🚪','Getting in','Yeast takes in maltose with a maltose transporter and splits it into glucose with maltase. That’s how it ferments the maltose from malted barley when brewing beer.']],
+ plant:[['🌱','Germination','In germinating seeds, amylase hydrolyses stored starch into maltose and then glucose, fuelling growth until the seedling can photosynthesise.']]},
+cellulose:{
+ human:[['🍽️','Digestion','Humans make no cellulase, so we can’t hydrolyse the β-1,4-glycosidic bonds in cellulose.'],['🦠','Fibre','It passes through as dietary fibre, which helps food move through the gut. Some bacteria in the large intestine ferment part of it.']],
+ bact:[['🤷','Not used','E. coli has no cellulase, so it can’t break down cellulose.']],
+ yeast:[['🤷','Not used','Yeast can’t break down cellulose.']],
+ plant:[['🧱','Cell walls','Plants make cellulose: long, straight β-glucose chains that hydrogen-bond together into microfibrils. These give the cell wall its strength and stop cells bursting.']]},
+aa:{
+ human:[['🍽️','Getting in','Amino acids are absorbed in the small intestine by co-transport with sodium ions, then enter the blood.'],['🧬','What it does','Cells use them to make proteins. In translation, tRNA brings each amino acid to a ribosome, which joins them by peptide bonds in the order set by the mRNA codons.'],['🏭','Spare amino acids','Humans can’t store spare amino acids. The liver deaminates them: the amine group becomes ammonia, which is turned into urea and excreted in urine, and the rest can be respired or stored as fat.']],
+ bact:[['🚪','Getting in','Amino acids enter through specific transport proteins in the cell membrane.'],['🧬','What it does','They’re joined into proteins on 70S ribosomes in the cytoplasm. E. coli can also make all 20 amino acids itself.'],['⚡','Spare','Some can be broken down as a source of energy, carbon or nitrogen.']],
+ yeast:[['🧬','What it does','Yeast is a eukaryote: it builds proteins on 80S ribosomes and can make all its amino acids itself.'],['🍺','Flavour','When yeast breaks some amino acids down it makes fusel alcohols, part of the flavour of beer and bread.']],
+ plant:[['🌱','Made','Plants make all their own amino acids, using nitrate absorbed by active transport into root hair cells.'],['🚚','Transport','Amino acids are carried in the phloem to where proteins are being made.']]},
+peptide:{
+ human:[['🍽️','Digestion','Proteases hydrolyse peptide bonds. Endopeptidases cut inside the chain, exopeptidases remove amino acids from the ends, and dipeptidases on the small intestine’s membrane split dipeptides.'],['🩸','Absorption','The free amino acids are absorbed by co-transport with sodium ions.'],['🧬','Rebuilt','Cells then build their own proteins from them at ribosomes, following the genetic code.']],
+ bact:[['🚪','Getting in','Short peptides are taken in by peptide transporters, then peptidases inside hydrolyse them into amino acids.'],['🧬','Used','The amino acids are built into the bacterium’s own proteins.']],
+ yeast:[['🚪','Getting in','Yeast can take in small peptides through transporters and hydrolyse them into amino acids.']],
+ plant:[['🧬','Used','Plant cells hydrolyse peptides and proteins with proteases, for example when germinating seeds break down their protein stores.']]},
+nuc:{
+ human:[['🏭','Where they come from','Your cells make most of their own nucleotides. Nucleic acids in food are hydrolysed by nucleases and the parts are absorbed.'],['🧬','What they do','In the nucleus, DNA polymerase joins DNA nucleotides into new strands during semi-conservative replication; RNA polymerase joins RNA nucleotides into mRNA during transcription.'],['♻️','Breakdown','Spare purine bases (A and G) are broken down to uric acid, which is excreted in urine.']],
+ bact:[['🏭','Made','E. coli makes its own nucleotides.'],['🧬','What they do','They’re joined into DNA when its circular chromosome and plasmids are copied, and into RNA during transcription, all in the cytoplasm because there’s no nucleus.']],
+ yeast:[['🧬','What they do','Yeast is a eukaryote, so nucleotides are built into DNA in its nucleus (16 chromosomes) and into RNA during transcription.']],
+ plant:[['🌱','Made','Plants make their own nucleotides using nitrate and phosphate taken up from the soil. That’s why fertilisers contain nitrogen and phosphorus.'],['🧬','What they do','They’re used to copy DNA in the nucleus, chloroplasts and mitochondria, and to make RNA.']]},
+strand:{
+ human:[['🏠','Where it is','DNA is in the nucleus as chromosomes, wound around histone proteins. Mitochondria have a little DNA of their own too.'],['🧬','What it does','Its base sequence carries genes. A gene is transcribed into mRNA, which leaves the nucleus through a nuclear pore and is translated into a polypeptide at a ribosome.'],['📋','Copying','Before cell division, helicase unzips the strands and DNA polymerase builds a new strand on each one, so each copy keeps one old strand (semi-conservative replication).']],
+ bact:[['🏠','Where it is','Bacterial DNA is one circular chromosome in the cytoplasm, not wound around histones, plus small rings called plasmids.'],['🧬','What it does','Genes are transcribed and translated at the same time in the cytoplasm. Plasmids often carry extra genes, such as antibiotic resistance, and can be passed to other bacteria.']],
+ yeast:[['🏠','Where it is','Linear chromosomes inside a nucleus, wound around histones, just like ours. Yeast is widely used to study genes because many work like human ones.']],
+ plant:[['🏠','Where it is','In the nucleus as chromosomes, plus small circular DNA in chloroplasts and mitochondria.']]},
+rna:{
+ human:[['📨','What it does','mRNA carries a copy of a gene from the nucleus to the ribosomes, where its codons are translated into a polypeptide. tRNA and rRNA are made of RNA too.'],['♻️','Short-lived','mRNA is broken down after use, so cells can control how much of each protein they make.']],
+ bact:[['📨','What it does','Bacteria have no nucleus, so ribosomes start translating mRNA while it’s still being transcribed.']],
+ yeast:[['📨','What it does','mRNA is made in the nucleus and travels out to ribosomes in the cytoplasm, as in human cells.']],
+ plant:[['📨','What it does','mRNA carries genes from the nucleus to ribosomes, as in other eukaryotes. Chloroplasts and mitochondria make some RNA of their own too.']]},
+atp:{
+ human:[['🏭','Where it’s made','Mostly by ATP synthase in the inner membrane of mitochondria during oxidative phosphorylation, plus a little in glycolysis and the Krebs cycle.'],['⚡','What it does','ATP hydrolase hydrolyses it to ADP and phosphate, releasing energy in small, manageable amounts for muscle contraction, active transport and making proteins and DNA.'],['🔗','Phosphorylation','The released phosphate can be added to other molecules to make them more reactive, like glucose at the start of glycolysis.'],['♻️','Recycled','ATP isn’t stored in large amounts: it’s remade from ADP and phosphate almost as soon as it’s used.']],
+ bact:[['🏭','Where it’s made','ATP synthase in the cell membrane makes it, driven by hydrogen ions pumped out by the electron transport chain, plus a little from glycolysis.'],['⚡','What it does','It powers active transport, building new molecules and cell division.']],
+ yeast:[['🏭','Where it’s made','In mitochondria when oxygen is available; otherwise only 2 ATP per glucose come from glycolysis during fermentation.'],['⚡','What it does','It powers active transport, growth and budding (yeast reproduces by budding).']],
+ plant:[['☀️','Made in light','In the light-dependent reactions, ATP synthase in the thylakoid membranes makes ATP (photophosphorylation). Respiration makes it too.'],['🔄','Used in the Calvin cycle','ATP and reduced NADP turn glycerate 3-phosphate into triose phosphate, and ATP regenerates RuBP.'],['🌱','Roots','Root cells use ATP for active transport of mineral ions from the soil.']]},
+adp:{
+ human:[['⚡','What it is','ADP is what’s left after ATP is hydrolysed: adenine, ribose and two phosphates.'],['🏭','Recharged','ATP synthase joins ADP and inorganic phosphate (a condensation reaction), powered by hydrogen ions flowing through it in mitochondria.']],
+ bact:[['🏭','Recharged','ATP synthase in the cell membrane turns ADP and phosphate back into ATP.']],
+ yeast:[['🏭','Recharged','ATP synthase in the mitochondria re-forms ATP from ADP and phosphate; during fermentation, glycolysis does it.']],
+ plant:[['☀️','Recharged','In chloroplasts, light energy drives ATP synthase to turn ADP and phosphate into ATP.']]},
+fat:{
+ human:[['🍽️','Digestion','Bile salts emulsify fats into small droplets, giving a larger surface area, and lipase hydrolyses the ester bonds to release fatty acids and monoglycerides.'],['🩸','Absorption','These form micelles, diffuse into the small intestine’s epithelial cells, are made back into triglycerides and leave in chylomicrons through the lymph.'],['🫙','Storage and energy','Triglycerides are stored in adipose tissue. Respiring them gives over twice as much energy per gram as carbohydrate, and fat also insulates and protects organs.']],
+ bact:[['🤷','Fats','E. coli isn’t good at using whole fats, but it can take up fatty acids and break them down by β-oxidation for energy.'],['🧱','Its own lipids','It makes its own fatty acids to build phospholipids for its membranes.']],
+ yeast:[['🫙','Storage','Yeast stores triglycerides in lipid droplets.'],['⚡','Breakdown','In yeast, fatty acids are broken down by β-oxidation in peroxisomes rather than mitochondria.']],
+ plant:[['🌻','Seed oils','Many seeds store oils (triglycerides), like sunflower and rapeseed.'],['🌱','Germination','Lipases break them down, and germinating seeds can convert the fatty acids into sugars, something animals can’t do.']]},
+water:{
+ human:[['🥤','Getting in','Water is absorbed by osmosis, mostly in the small intestine and colon.'],['🩸','What it does','It’s the solvent in blood plasma and cytoplasm and a reactant in every hydrolysis. Sweating cools you because evaporating water takes a lot of heat (high latent heat).'],['🫘','Control','The kidneys keep water balance. When you’re dehydrated, ADH makes the collecting ducts more permeable (more aquaporins), so more water is reabsorbed.']],
+ bact:[['💧','Osmosis','Water moves in and out by osmosis, partly through aquaporin channels.'],['🧱','Cell wall','In dilute solutions water floods in, but the rigid cell wall stops the cell from bursting.']],
+ yeast:[['💧','Osmosis','Water moves in and out by osmosis. In very sugary solutions, yeast makes glycerol inside its cells to stop too much water leaving.']],
+ plant:[['🌱','Getting in','Root hair cells absorb water from the soil by osmosis.'],['⬆️','Moving up','It travels up the xylem pulled by transpiration: water evaporates from the leaves, and cohesion between water molecules pulls a continuous column up behind it.'],['☀️','Used','In the light-dependent reactions, photolysis splits water into hydrogen ions, electrons and oxygen. Water also keeps cells turgid.']]},
+ethene:{
+ human:[['🤷','No hormone role','Humans have no ethene receptors and it isn’t a hormone for us. It was once used as an anaesthetic gas.']],
+ bact:[['🤷','No effect','E. coli doesn’t respond to ethene.']],
+ yeast:[['🤷','No effect','Yeast doesn’t respond to ethene.']],
+ plant:[['🍌','A plant hormone','Ethene is a gas that plants use as a hormone. It speeds up fruit ripening, which is why one ripe banana ripens the others.'],['🍂','Other effects','It also helps leaves and fruit fall (abscission) and controls how seedlings grow as they push up through soil.'],['📡','Mechanism','It binds to ethylene receptor proteins in the endoplasmic reticulum membrane, which switches on genes for ripening enzymes.']]},
+cloz:{
+ human:[['💊','Getting in','It’s taken as a tablet, absorbed in the gut, and partly broken down by the liver before reaching the rest of the body (first-pass metabolism).'],['🧠','Reaching the brain','It’s lipid-soluble, so it crosses the blood-brain barrier.'],['🔒','Mechanism','It’s an antagonist: it binds to receptors without activating them. It blocks serotonin 5-HT2A receptors strongly and dopamine D2 receptors more weakly, which reduces psychotic symptoms with fewer movement side effects than older antipsychotics.'],['⚠️','Other targets','It also blocks histamine H1 receptors (drowsiness, weight gain), muscarinic acetylcholine receptors (constipation) and α1 adrenoceptors (low blood pressure on standing). Rarely it causes agranulocytosis, a dangerous fall in white blood cells, so patients have regular blood tests.'],['♻️','Breakdown','Liver enzymes, mainly CYP1A2, break it down to norclozapine. Smoking speeds up CYP1A2, which can change the dose needed.']],
+ bact:[['🤷','No target','Bacteria have no dopamine or serotonin receptors, so clozapine has nothing to bind to here.']],
+ yeast:[['🤷','No target','Yeast has no dopamine or serotonin receptors, so clozapine has nothing to bind to here.']],
+ plant:[['🤷','No target','Plants don’t have the receptors clozapine blocks, so it has no known specific action here.']]},
+o2:{
+ human:[['🫁','Getting in','Oxygen diffuses from the alveoli into the blood, down its concentration gradient.'],['🩸','Transport','It binds to haemoglobin in red blood cells as oxyhaemoglobin, which unloads it in respiring tissues where there’s more carbon dioxide (the Bohr effect).'],['⚡','What it does','In mitochondria, oxygen is the final electron acceptor of the electron transport chain: it combines with electrons and hydrogen ions to make water.']],
+ bact:[['🔀','Optional','E. coli is a facultative anaerobe. It uses oxygen when it can, as the final electron acceptor in its membrane’s electron transport chain.'],['🌑','Without it','With no oxygen it can use other acceptors such as nitrate, or ferment.']],
+ yeast:[['⚡','Respiration','Oxygen is the final electron acceptor in the mitochondria.'],['🧱','Building','Yeast also needs some oxygen to make the sterols in its cell membranes.']],
+ plant:[['☀️','Made','Oxygen is released when water is split by photolysis in the light-dependent reactions, then diffuses out through stomata.'],['⚡','Used','Plant cells also respire, using oxygen in their mitochondria day and night.']]},
+co2:{
+ human:[['🏭','Made','Carbon dioxide is released by the link reaction and Krebs cycle in mitochondria.'],['🩸','Transport','Most travels in the blood as hydrogencarbonate ions, formed with help from the enzyme carbonic anhydrase in red blood cells.'],['🫁','Out','It diffuses into the alveoli and is breathed out. A rise in blood CO₂ is detected by chemoreceptors and makes you breathe faster.']],
+ bact:[['🏭','Made','Carbon dioxide is released by its Krebs cycle and diffuses out of the cell.']],
+ yeast:[['🍞','Made','CO₂ comes from fermentation (pyruvate → ethanal) and from the Krebs cycle. It’s the gas that makes bread dough rise.']],
+ plant:[['🍃','Getting in','CO₂ diffuses into leaves through stomata.'],['☀️','Fixed','In the Calvin cycle, rubisco combines it with RuBP. CO₂ concentration is often the limiting factor for photosynthesis, which is why some greenhouses add it.']]},
+ethanol:{
+ human:[['🍺','Getting in','Ethanol is absorbed quickly from the stomach and small intestine and spreads through body water.'],['🧠','Effects','It’s a depressant: it slows the nervous system, mainly by enhancing the effect of GABA at its receptors.'],['🫀','Breakdown','In the liver, alcohol dehydrogenase oxidises it to ethanal, which is then oxidised to ethanoate. This uses up NAD, which can lead to fat building up in the liver.']],
+ bact:[['🏭','Made','E. coli makes some ethanol itself during mixed-acid fermentation.'],['☠️','Too much','Concentrated ethanol (around 70%) kills bacteria by denaturing proteins and disrupting membranes, which is why it’s used in hand gel.']],
+ yeast:[['🏭','Made','Ethanol is the waste product of alcoholic fermentation.'],['🔄','Used later','When the sugar runs out and oxygen is present, yeast can switch to respiring the ethanol.'],['☠️','Limit','At high concentrations (around 15%) ethanol kills the yeast, which limits how strong fermented drinks can get.']],
+ plant:[['🌊','Made in floods','In waterlogged roots short of oxygen, plants respire anaerobically and make ethanol, as yeast does. Too much damages the roots.']]}
+};
+function mechKey(R){
+  var one=R.intact&&R.uids.length===1?TPL[R.units[R.uids[0]].k]:null,K=R.kinds||{},ks=Object.keys(K),allB=R.intact&&R.uids.every(function(u){return R.units[u].k==='bglc';});
+  if(one){
+    if(one.mk)return one.mk;
+    if(one.kind==='sugar')return 'glucose';
+    if(one.kind==='aa')return 'aa';
+    if(one.kind==='nuc')return 'nuc';
+    if(one.kind==='glycerol'||one.kind==='fatty')return 'fat';
+    if(one.kind==='water')return 'water';
+    if(R.uids[0]&&R.units[R.uids[0]].k==='ethene')return 'ethene';
+  }
+  if(R.intact&&ks.length===1){
+    if(ks[0]==='aa')return 'peptide';
+    if(ks[0]==='sugar')return allB?'cellulose':'carbs';
+    if(ks[0]==='nuc'){var rna=R.uids.every(function(u){return TPL[R.units[u].k].rna;});return rna?'rna':'strand';}
+  }
+  if(R.intact&&ks.every(function(k){return k==='glycerol'||k==='fatty';}))return 'fat';
+  var f=R.formula;
+  if(f==='O2')return 'o2';if(f==='CO2')return 'co2';if(f==='H2O')return 'water';if(f==='C2H4')return 'ethene';
+  if(f==='C2H6O'&&R.M.some(function(i){return el(i)==='O'&&nb(i).some(function(e){return el(e.n)==='H';});}))return 'ethanol';
+  return null;
+}
+function orgOpen(org){
+  if(!SELMOL)return;
+  var R=analyse(SELMOL);
+  ORGS.key=mechKey(R);ORGS.org=org||'human';ORGS.step=0;ORGS.name=R.name||'This molecule';ORGS.formula=R.formula;
+  ORGS.beta=R.intact&&R.uids.length===1&&R.units[R.uids[0]].k==='bglc';
+  var q=pcQuery(R);ORGS.cid=null;
+  if(q&&window.fetch)pcLookup(q).then(function(d){ORGS.cid=d.cid;if($('orgOv').classList.contains('open'))orgRender();},function(){});
+  $('orgOv').classList.add('open');orgRender();
+}
+function orgRender(){
+  var tabs='';Object.keys(ORGL).forEach(function(o){tabs+='<button type="button" class="otab" data-cmd="orgset" data-org="'+o+'" aria-pressed="'+(o===ORGS.org)+'">'+ORGL[o]+'</button>';});
+  $('orgTabs').innerHTML=tabs;
+  var steps=ORGS.key&&MOA[ORGS.key]&&MOA[ORGS.key][ORGS.org];
+  if(steps&&ORGS.beta&&ORGS.org==='human')steps=steps.concat([['🔄','α and β','α- and β-glucose switch between forms in solution, so cells use both. But humans have no enzyme to break the β-1,4 bonds in cellulose, the polymer of β-glucose.']]);
+  var h='<p class="ohead">'+fmtF(ORGS.formula)+' · <b>'+escH(ORGS.name)+'</b> in a <b>'+ORGL[ORGS.org].replace(/^\S+\s/,'').toLowerCase()+'</b></p>';
+  if(steps){
+    var n=steps.length,i=clamp(ORGS.step,0,n-1),st=steps[i];
+    h+='<div class="ostep"><div class="oico" aria-hidden="true">'+st[0]+'</div><div><p class="onum">Step '+(i+1)+' of '+n+'</p><h3>'+st[1]+'</h3><p>'+st[2]+'</p></div></div>';
+    h+='<div class="odots" aria-hidden="true">';for(var k=0;k<n;k++)h+='<span'+(k===i?' class="on"':'')+'></span>';h+='</div>';
+    h+='<div class="acts"><button class="btn ghost" type="button" data-cmd="orgstep" data-d="-1"'+(i===0?' disabled':'')+'>Back</button><button class="btn" type="button" data-cmd="orgstep" data-d="1"'+(i===n-1?' disabled':'')+'>Next</button></div>';
+  }else h+='<p class="muted">Bond Bench doesn’t have notes for this molecule yet. If PubChem has research on how it works, it appears below.</p>';
+  h+='<section class="omoa" id="orgMoa"></section>';
+  $('orgBody').innerHTML=h;
+  if(ORGS.cid)pcMoA(ORGS.cid).then(function(m){
+    var box=$('orgMoa');if(!box||!m)return;
+    box.innerHTML='<h3>From PubChem: mechanism of action</h3><p>'+escH(excerpt(m.t,420))+'</p><p class="muted">'+(m.src?'Source: '+escH(m.src)+'. ':'')+'Research like this is mostly about humans and other mammals. <a href="'+PCB+'/compound/'+ORGS.cid+'#section=Mechanism-of-Action" target="_blank" rel="noopener">Read more ↗</a></p>';
+  });
+}
+function orgClose(){$('orgOv').classList.remove('open');}
 
 /* ---------- 3D shape: electron domains (VSEPR), lone pairs, spare-bond directions ---------- */
 function sub3(a,b){return {x:a.x-b.x,y:a.y-b.y,z:(a.z||0)-(b.z||0)};}
@@ -2090,7 +2394,7 @@ function draw(){
       var t=TPL[S.units[a.u].k];
       if(t.kind==='aa'&&a.tag==='CA')labels[a.u]={x:a.x,y:a.y-1.35*BL,t:t.code};
       else if(t.kind==='sugar'&&/^(C[1-5]|O5)$/.test(a.tag)){var L2=labels[a.u]||(labels[a.u]={x:0,y:0,n:0,t:t.anomer,big:1});L2.x+=a.x;L2.y+=a.y;L2.n++;}
-      else if(t.kind==='nuc'&&a.tag==='B'){var L3=labels[a.u]||(labels[a.u]={x:0,y:0,n:0,t:t.code,big:1});L3.x+=a.x;L3.y+=a.y;L3.n++;}
+      else if((t.kind==='nuc'||t.kind==='atp')&&a.tag==='B'){var L3=labels[a.u]||(labels[a.u]={x:0,y:0,n:0,t:t.code,big:1});L3.x+=a.x;L3.y+=a.y;L3.n++;}
     }
   }
   items.forEach(function(it){if(it[1])drawAtom(it[2]);else drawBond(it[2]);});
@@ -2353,6 +2657,11 @@ function molInfo(M){
   if(R.spare)h+='<div class="spare"><span>'+R.spare+' spare bond'+(R.spare>1?'s':'')+' left (open circles).</span><button class="btn ghost" type="button" data-cmd="fillh">Add hydrogens</button></div>';
   if(R.explain&&R.explain.length){h+='<div class="expl">';R.explain.forEach(function(p){h+='<p>'+p+'</p>';});h+='</div>';}
   else if(!R.name&&R.n>1)h+='<p class="muted">This one isn’t in the library, so it’s shown by its formula.</p>';
+  var pq=pcQuery(R);
+  h+='<section class="pcbox" id="pcBox" data-f="'+escH(R.formula)+'"'+(pq?' data-q="'+escH(JSON.stringify(pq))+'"':'')+'><h3>PubChem</h3><p class="muted">Looking it up…</p></section>';
+  h+='<section><h3>Organism lab</h3><p class="muted">Put this molecule inside a living thing and step through what happens to it.</p><div class="orgbtns">';
+  Object.keys(ORGL).forEach(function(o){h+='<button class="btn ghost" type="button" data-cmd="org" data-org="'+o+'">'+ORGL[o]+'</button>';});
+  h+='</div></section>';
   if(R.links.length){
     var c={};R.links.forEach(function(b){var n=linkName(b);c[n]=(c[n]||0)+1;});
     h+='<section><h3>Links made</h3><ul class="blist">';
@@ -2392,6 +2701,9 @@ function shapeHTML(id){
   return h;
 }
 function renderInfo(){
+  renderInfo0();pcFill();
+}
+function renderInfo0(){
   var box=$('binfo');if(!box)return;
   if(!SEL||!SELMOL){box.innerHTML=defaultInfo();return;}
   var h='';
@@ -2837,6 +3149,10 @@ function initBuild(){
     else if(k==='shelf'){showTab(c.dataset.shelf);applyFloat();saveFloat();}
     else if(k==='full'){var on=!FULL;setFull(on);browserFull(on);HT.autoFull=false;}
     else if(k==='info'){var hid=document.body.classList.toggle('noinfo');c.setAttribute('aria-pressed',!hid);}
+    else if(k==='org')orgOpen(c.dataset.org);
+    else if(k==='orgset'){ORGS.org=c.dataset.org;ORGS.step=0;orgRender();}
+    else if(k==='orgstep'){ORGS.step+=+c.dataset.d;orgRender();}
+    else if(k==='orgclose')orgClose();
     else if(k==='fmin'){FL.min=!FL.min;applyFloat();saveFloat();}
     else if(k==='fsize'){FL.sz=FL.sz===2?1:FL.sz+1;applyFloat();saveFloat();}
     else if(k==='allel')openOverlay();
@@ -2854,8 +3170,9 @@ function initBuild(){
     else if(k==='delmol'){if(SELMOL){pushUndo();SELMOL.forEach(removeAtom);SEL=null;commit();}}
   });
   initFloat();
+  $('orgOv').addEventListener('click',function(e){if(e.target===$('orgOv'))orgClose();});
   document.addEventListener('keydown',function(e){
-    if(e.key==='Escape')closeOverlay();
+    if(e.key==='Escape'){closeOverlay();orgClose();}
     if($('buildView').hidden||/INPUT|TEXTAREA/.test((e.target&&e.target.tagName)||''))return;
     if((e.metaKey||e.ctrlKey)&&(e.key==='z'||e.key==='Z')){e.preventDefault();undo();}
     else if((e.key==='Delete'||e.key==='Backspace')&&SEL){e.preventDefault();deleteSel();}
